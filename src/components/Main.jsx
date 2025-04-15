@@ -1,13 +1,66 @@
-import React from 'react';
-import { StyleSheet, Text, SafeAreaView, TouchableHighlight, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, TouchableHighlight, View, Button, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTailwind } from 'tailwind-rn';
 
-const Main = () => {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.titleText}>IMB-PC</Text>
-      <Text style={styles.subtitleText}>Lector de Partidas</Text>
-      
+export function Main()  {
+
+  const [hasPermission, setHasPermission] = useState(null);
+  const [scanned, setScanned] = useState(false);
+  const [scannedData, setScannedData] = useState('');
+  const tailwind = useTailwind();
+
+  useEffect(() => {
+    const getBarCodeScannerPermissions = async () => {
+      const { status } = await BarCodeScanner.requestPermissionsAsync();
+      setHasPermission(status === 'granted');
+    };
+
+    getBarCodeScannerPermissions();
+  }, []);
+
+  const handleBarCodeScanned = ({ type, data }) => {
+    setScanned(true);
+    setScannedData(data);
+    Alert.alert(
+      'Código escaneado',
+      `Tipo de código: ${type}\nDatos: ${data}`,
+      [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+    );
+  };
+
+  if (hasPermission === null) {
+    return (
+      <SafeAreaView style={tailwind('flex-1 justify-center items-center')}>
+        <Text style={tailwind('text-lg')}>Solicitando permisos de cámara...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (hasPermission === false) {
+    return (
+      <SafeAreaView style={tailwind('flex-1 justify-center items-center p-4')}>
+        <Text style={tailwind('text-lg text-red-500 text-center mb-4')}>
+          No se ha concedido acceso a la cámara
+        </Text>
+        <Button 
+          title="Solicitar permisos nuevamente" 
+          onPress={() => {
+            BarCodeScanner.requestPermissionsAsync();
+          }} 
+        />
+      </SafeAreaView>
+    );
+  }
+
+
+  return (    
+    <View style={styles.container}>
+      <Text style={styles.titleText}>IMB - PC</Text>
+      <Text style={styles.subtitleText}>Lector de partidas</Text>      
       <View style={styles.buttonWrapper}>
         <TouchableHighlight style={styles.button} onPress={() => alert('Scanned!')}>
           <View style={styles.buttonContent}>
@@ -16,8 +69,9 @@ const Main = () => {
           </View>
         </TouchableHighlight>
       </View>
-
-    </SafeAreaView>
+      <Text style={styles.footerText}>© Copyright 2025 IMB-PC</Text>      
+      <StatusBar style="light" />
+    </View>
   );
 }
 
@@ -25,6 +79,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1B2635',
+    paddingTop: Constants.statusBarHeight
   },
   titleText: {
     height: 50,
@@ -43,8 +98,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#1B2635',
     padding: 10,   
     fontSize: 20,
-    color: 'white',
+    color: '#e89545',
     fontWeight: 'bold',
+  },
+  footerText: {
+    height: 25,
+    width: '100%',
+    textAlign: 'center',
+    backgroundColor: '#374151',
+    padding: 5,   
+    fontSize: 10,
+    color: 'white',
   },
   buttonWrapper: {
     flex: 1,
@@ -54,7 +118,7 @@ const styles = StyleSheet.create({
   button: {
     height: 50,
     width: '50%',
-    backgroundColor: 'rgb(71 130 218)',
+    backgroundColor: '#4782da',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
@@ -71,4 +135,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Main;
+
+export default Main
