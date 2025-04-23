@@ -6,36 +6,19 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
-    "lint": "eslint .",
-    "build:tailwind": "tailwindcss --input input.css --output tailwind.css",
-    "dev:tailwind": "concurrently \"tailwindcss --input input.css --output tailwind.css --watch\" \"expo start\""
+    "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~4.0.1",
-    "concurrently": "^9.1.2",
-    "expo": "~52.0.43",
-    "expo-barcode-scanner": "~12.1.0",
-    "expo-constants": "~17.0.8",
+    "expo": "~52.0.46",
+    "expo-barcode-scanner": "^13.0.1",
+    "expo-camera": "~16.0.18",
+    "expo-media-library": "~17.0.6",
     "expo-status-bar": "~2.0.1",
-    "nativewind": "^2.0.11",
     "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-native": "0.76.9",
-    "react-native-safe-area-context": "4.12.0",
-    "react-native-web": "~0.19.13",
-    "tailwind-rn": "^4.2.0"
+    "react-native": "0.76.9"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "eslint": "^8.57.0",
-    "eslint-config": "^0.3.0",
-    "eslint-config-expo": "~8.0.1",
-    "eslint-plugin-prettier": "^5.2.6",
-    "metro-react-native-babel-preset": "^0.77.0",
-    "prettier": "^3.5.3",
-    "react-native-dotenv": "^3.4.11",
-    "tailwindcss": "^3.3.2"
+    "@babel/core": "^7.20.0"
   },
   "private": true
 }
