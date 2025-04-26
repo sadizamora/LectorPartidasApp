@@ -1,12 +1,11 @@
 
 // screens/PhotoPreviewScreen.js
 import React from 'react';
-import { View, Image, StyleSheet, SafeAreaView,Text, TouchableHighlight} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
+import { View, Image, SafeAreaView,Text, TouchableHighlight} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { API_URL,REACT_APP_API_HEADERS } from '@env';
 import axios from 'axios';
+import styles from '../styles';
 
 
 export default function PhotoPreviewScreen({ route, navigation }) {
@@ -29,6 +28,7 @@ export default function PhotoPreviewScreen({ route, navigation }) {
           headers: JSON.parse(REACT_APP_API_HEADERS),
           data: {
             FotoRenap: imgCoverted, 
+            FotoRenap2: imgCoverted,
             IdEmp: 'SZAMORAX01',
             IpHost: '131.107.1.23',
             HostName: 'DEV',
@@ -40,10 +40,16 @@ export default function PhotoPreviewScreen({ route, navigation }) {
 
         console.log('Fin'+JSON.stringify(response.data));
 
+        if (response.Error) {
+          console.log('Error en la API:', response.Error);
+          navigation.navigate('Camera')
+        }
+
         if (response.data) {
           console.log('Respuesta de la API:', response.data);
           navigation.navigate('PhotoData', { scannedData: response.data.msg})
         }
+
        
       } catch (error) {
         console.error('Error en la petición:', error);
@@ -55,10 +61,9 @@ export default function PhotoPreviewScreen({ route, navigation }) {
 
   return (
     <SafeAreaView  style={styles.container}>
-        <Text style={styles.titleText}>Fotografía</Text>      
-        <StatusBar style="light" />
-        <Image source={{ uri: photo.uri }} style={styles.image} />
-
+      
+      <Image source={{ uri: photo.uri }} style={styles.image} />
+      
       <View style={styles.containerButton}>
           <TouchableHighlight style={styles.button}  onPress={handleConfirm} >
             <View style={styles.buttonContent}>
@@ -78,80 +83,3 @@ export default function PhotoPreviewScreen({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1B2635',
-    paddingTop: Constants.statusBarHeight,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-
-  containerButton: {
-    flex: 1,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    padding: 10,
-    gap: 20,
-    
-  },
-  image: {
-    width: '100%',
-    height: '70%',
-    resizeMode: 'contain',
-    marginBottom: 20,
-    padding: 10,
-    borderRadius: 10,
-  },
-  buttons: {
-    padding: 10,
-    height: 60,
-    width: '100%',
-    backgroundColor: '#4782DA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5,
-  },
-  
-  titleText: {
-    height: 50,
-    width: '100%',
-    textAlign: 'center',
-    backgroundColor: '#374151',
-    padding: 10,   
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  subtitleText: {
-    height: 50,
-    width: '100%',
-    textAlign: 'center',
-    backgroundColor: '#1B2635',
-    padding: 10,   
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-
-  button: {
-    height: 60,
-    width: '40%',
-    backgroundColor: '#4782DA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 5,
-  },
-
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});

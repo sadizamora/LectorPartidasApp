@@ -7,20 +7,23 @@ import QRResultScreen from './screens/QRResultScreen';
 import CameraScreen from './screens/CameraScreen';
 import PhotoPreviewScreen from './screens/PhotoPreviewScreen';
 import PhotoDataScreen from './screens/PhotoDataScreen';
+import { StatusBar } from 'expo-status-bar';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="QRScanner" component={QRScannerScreen} />
-        <Stack.Screen name="Camera" component={CameraScreen} />
-        <Stack.Screen name="QRResult" component={QRResultScreen} />
-        <Stack.Screen name="PhotoPreview" component={PhotoPreviewScreen} />
-        <Stack.Screen name="PhotoData" component={PhotoDataScreen} />
+      <StatusBar style="dark" backgroundColor="white" translucent={false}/>
+      <Stack.Navigator initialRouteName='Home' screenOptions={{headerStyle: {backgroundColor:  '#233043'}, headerTintColor: '#fff',
+      headerTitleStyle: {fontWeight: 'bold'}, headerTitleAlign: 'center'}}>          
+          <Stack.Screen name="Home"   options={{title: 'COLEGIO IMB - PC'}} component={HomeScreen} />
+          <Stack.Screen name="QRScanner" options={{title: 'Scanner'}} component={QRScannerScreen} />
+          <Stack.Screen name="Camera" options={{title: 'Camara'}} component={CameraScreen} />
+          <Stack.Screen name="QRResult" options={{title: 'Resultado'}} component={QRResultScreen} />
+          <Stack.Screen name="PhotoPreview" options={{title: 'Fotografía'}} component={PhotoPreviewScreen} />
+          <Stack.Screen name="PhotoData" options={{title: 'Resultado'}} component={PhotoDataScreen} />
       </Stack.Navigator>
-    </NavigationContainer>
+  </NavigationContainer>
   );
 }

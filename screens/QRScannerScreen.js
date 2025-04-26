@@ -1,11 +1,8 @@
-
-// screens/QRScannerScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet, SafeAreaView } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
+import { View, SafeAreaView } from 'react-native';
 import { CameraView, Camera } from "expo-camera";
 import { API_URL,REACT_APP_API_HEADERS } from '@env';
+import styles from '../styles';
 
 export default function QRScannerScreen({ navigation }) {
   const [scanned, setScanned] = useState(false);
@@ -39,11 +36,8 @@ export default function QRScannerScreen({ navigation }) {
     
   };
 
-
   return (
     <SafeAreaView  style={styles.container}>
-      <StatusBar style="light" />
-      <Text style={styles.titleText}>Scanner</Text>  
       <View style={styles.barcodebox}>
         <CameraView
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
@@ -53,47 +47,6 @@ export default function QRScannerScreen({ navigation }) {
           style={{ height: 400, width: 400 }}
         />
       </View>
-      {scanned && <Button title={'Scanear otra vez?'} onPress={() => setScanned(false)} color='#4782DA' padding='5' />}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1B2635',
-    paddingTop: Constants.statusBarHeight,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-
-  barcodebox: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-    
-  },
-
-
-  titleText: {
-    height: 50,
-    width: '100%',
-    textAlign: 'center',
-    backgroundColor: '#374151',
-    padding: 10,   
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  subtitleText: {
-    height: 50,
-    width: '100%',
-    textAlign: 'center',
-    backgroundColor: '#1B2635',
-    padding: 10,   
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-});
