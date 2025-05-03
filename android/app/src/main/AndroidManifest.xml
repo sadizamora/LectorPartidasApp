@@ -27,7 +27,6 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="com.joeltovarx.LectorPartidasApp"/>
-        <data android:scheme="exp+lectorpartidasapp"/>
       </intent-filter>
     </activity>
   </application>
