@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "LectorPartidasApp",
-    "slug": "LectorPartidasApp",
+    "slug": "lectorpartidasapp",
+    "owner": "sadizamora",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -20,7 +21,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.joeltovarx.LectorPartidasApp",
+      "package": "com.sadizamora.LectorPartidasApp",
       "permissions": [
         "android.permission.CAMERA"
       ]
@@ -30,7 +31,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "898881fa-0b0e-4356-889c-b57e44008f0b"
+        "projectId": "2213f9e6-aff4-4b80-b482-ce0908945e01"
       }
     }
   }

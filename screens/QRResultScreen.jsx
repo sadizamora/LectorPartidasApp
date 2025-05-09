@@ -12,6 +12,9 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import Constants from "expo-constants";
+
+const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig.extra;
 
 export default function QRResultScreen({ route, navigation }) {
   const { scannedData, carnet, dataAlumno } = route.params;

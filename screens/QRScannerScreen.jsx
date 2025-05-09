@@ -8,7 +8,8 @@ import {
   Text,
 } from "react-native";
 import { CameraView, Camera } from "expo-camera";
-import { API_URL, REACT_APP_API_HEADERS } from "@env";
+import Constants from "expo-constants";
+const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig.extra;
 
 export default function QRScannerScreen({ route, navigation }) {
   const { dataAlumno, carnet } = route.params;

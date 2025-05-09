@@ -10,7 +10,8 @@ import {
   Modal,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { API_URL, REACT_APP_API_HEADERS } from "@env";
+import Constants from "expo-constants";
+const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig.extra;
 
 export default function CarnetScreeen({ route, navigation }) {
   const { user } = route.params;
