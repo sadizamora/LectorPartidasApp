@@ -32,7 +32,16 @@ export default function App({ navigation }) {
   const handleLogin = async () => {
     try {
       setLoading(true);
-      console.log("Credenciales:", credentials);
+      // Log credenciales para depuración
+      console.warn("Credenciales:", credentials);
+      // Validar campos vacíos
+      if (!credentials.username || !credentials.password) {
+        setMensajeAviso("Usuario y contraseña son obligatorios");
+        setShowAviso(true);
+        setLoading(false);
+        return;
+      }
+      // Llamada a la API
       const response = await fetch(
         "http://www.imb-pc.com:81/seguridadapi/seguridad/login",
         {
@@ -44,33 +53,38 @@ export default function App({ navigation }) {
           }),
         }
       );
-
-      console.log("Respuesta de la API:", response);
-
-      const resData = await response.json();
-
-      console.log(response);
-
+      // Log de status y headers
+      console.warn("Status:", response.status);
+      console.warn("Headers:", response.headers);
+      let resData = null;
+      try {
+        resData = await response.json();
+        console.warn("Respuesta JSON:", resData);
+      } catch (jsonErr) {
+        console.warn("Error parseando JSON:", jsonErr.message);
+        setMensajeAviso("Respuesta inválida del servidor");
+        setShowAviso(true);
+        setLoading(false);
+        return;
+      }
       // Validación de respuesta
       if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      if (resData.msg) {
-        setMensajeAviso(resData.msg.Mensaje);
+        setMensajeAviso(resData?.msg?.Mensaje || `Error ${response.status}`);
         setShowAviso(true);
+        setLoading(false);
+        return;
       }
-
       if (resData.IdEmp) {
-        setMensajeAviso(resData.IdEmp);
-        setShowAviso(true);
         navigation.navigate("Carnet", { user: resData });
+      } else {
+        setMensajeAviso(resData?.msg?.Mensaje || "Credenciales incorrectas");
+        setShowAviso(true);
       }
       setLoading(false);
     } catch (err) {
       setLoading(false);
-      console.error("Error en login:", err.message);
-      setMensajeAviso("Error en la conexión o en las credenciales");
+      console.warn("Error en login:", err.message);
+      setMensajeAviso(err.message);
       setShowAviso(true);
     }
   };
