@@ -11,6 +11,9 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Camera } from "expo-camera";
+import Constants from "expo-constants";
+
+const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function HomeScreen({ navigation, route }) {
   const { dataAlumno, carnet, user } = route.params;

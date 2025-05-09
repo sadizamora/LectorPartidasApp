@@ -16,7 +16,7 @@ import { CameraView } from "expo-camera";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
 import Constants from "expo-constants";
-const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig.extra;
+const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function CaptureScreen({ route, navigation }) {
   const { datos, dataAlumno, carnet, user } = route.params;

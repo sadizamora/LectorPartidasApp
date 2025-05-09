@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig.extra;
+const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function CarnetScreeen({ route, navigation }) {
   const { user } = route.params;
