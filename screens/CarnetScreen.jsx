@@ -22,38 +22,47 @@ export default function CarnetScreeen({ route, navigation }) {
   const [mensajeAviso, setMensajeAviso] = useState("");
 
   const handleSearch = async () => {
+    console.warn("handleSearch llamado", carnet);
     if (!carnet || carnet.trim() === "") {
       setMensajeAviso("Debes ingresar un carnet antes de buscar.");
       setShowAviso(true);
+      console.warn("Carnet vacío");
       return;
     }
     setLoading(true);
-    console.log("Carnet:", carnet);
     try {
-      //🔹 Realizar la petición a la API
-      await fetch(
-        `${API_URL}` +
-          "/schoolapi/utils/busquedas?opcion=CARNET&Carnet=" +
-          carnet,
+      console.warn(
+        "Llamando a la API:",
+        `${API_URL}/schoolapi/utils/busquedas?opcion=CARNET&Carnet=${carnet}`
+      );
+      const res = await fetch(
+        `${API_URL}/schoolapi/utils/busquedas?opcion=CARNET&Carnet=${carnet}`,
         {
           headers: JSON.parse(REACT_APP_API_HEADERS),
         }
-      )
-        .then((response) => response.json())
-        .then((response) => {
-          setLoading(false);
-          console.log("Respuesta de la API:", response);
-          setAlumno(response[0]);
-        })
-        .catch((err) => {
-          setLoading(false);
-          console.error(err);
-        });
+      );
+      const response = await res.json();
+      setLoading(false);
+      console.warn("Respuesta de la API:", response);
+      if (!Array.isArray(response) || response.length === 0) {
+        setMensajeAviso("No se encontró información para el carnet ingresado.");
+        setShowAviso(true);
+        console.warn("Respuesta vacía o no es array");
+        return;
+      }
+      if (!response[0] || typeof response[0] !== "object") {
+        setMensajeAviso("La respuesta de la API no es válida.");
+        setShowAviso(true);
+        console.warn("Primer elemento de la respuesta no es objeto");
+        return;
+      }
+      setAlumno(response[0]);
+      console.warn("Alumno seteado:", response[0]);
     } catch (err) {
       setLoading(false);
       setMensajeAviso("Error en la conexión o en las credenciales");
       setShowAviso(true);
-      return;
+      console.warn("Error en handleSearch:", err);
     }
   };
 
