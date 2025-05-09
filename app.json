@@ -24,7 +24,9 @@
       "package": "com.sadizamora.LectorPartidasApp",
       "permissions": [
         "android.permission.CAMERA"
-      ]
+      ],
+      "jsEngine": "hermes",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
