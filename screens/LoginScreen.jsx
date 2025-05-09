@@ -42,17 +42,14 @@ export default function App({ navigation }) {
         return;
       }
       // Llamada a la API
-      const response = await fetch(
-        "http://www.imb-pc.com:81/seguridadapi/seguridad/login",
-        {
-          method: "POST",
-          headers: JSON.parse(REACT_APP_API_HEADERS),
-          body: JSON.stringify({
-            LoginId: credentials.username,
-            password: credentials.password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/seguridadapi/seguridad/login`, {
+        method: "POST",
+        headers: JSON.parse(REACT_APP_API_HEADERS),
+        body: JSON.stringify({
+          LoginId: credentials.username,
+          password: credentials.password,
+        }),
+      });
       // Log de status y headers
       console.warn("Status:", response.status);
       console.warn("Headers:", response.headers);

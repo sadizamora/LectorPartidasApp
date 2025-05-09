@@ -86,6 +86,96 @@ export default function CarnetScreeen({ route, navigation }) {
     setCarnet(formatted);
   };
 
+  let renderAlumno = null;
+  try {
+    renderAlumno = (
+      <View style={styles.alumnoContainer}>
+        <View style={styles.headerRow}>
+          <Text style={styles.subtitleTextSearch}>Datos del alumno</Text>
+          <MaterialCommunityIcons
+            name="pencil"
+            size={28}
+            color="#EA963E"
+            onPress={() => setAlumno("")}
+          />
+        </View>
+        <View style={styles.infoContainer}>
+          <Text style={styles.dataTextSearch}>
+            <Text style={{ fontWeight: "bold", fontSize: 18 }}>Carnet: </Text>
+            <Text style={{ fontWeight: "bold", fontSize: 18, color: "blue" }}>
+              {dataAlumno?.Carnet || "-"}
+            </Text>
+          </Text>
+          <Text style={styles.dataTextSearch}>
+            <Text style={{ fontWeight: "bold", fontSize: 18 }}>Nombre: </Text>
+            <Text style={{ fontWeight: "bold", fontSize: 18, color: "blue" }}>
+              {dataAlumno?.Alumno || "-"}
+            </Text>
+          </Text>
+          <Text style={styles.dataTextSearch}>
+            <Text style={{ fontWeight: "bold", fontSize: 18 }}>
+              Último ciclo:{" "}
+            </Text>
+            <Text style={{ fontWeight: "bold", fontSize: 18, color: "blue" }}>
+              {dataAlumno?.UltimoCiclo || "-"}
+            </Text>
+          </Text>
+          <Text style={styles.dataTextSearch}>
+            <Text style={{ fontWeight: "bold", fontSize: 18 }}>
+              Última sede:{" "}
+            </Text>
+            <Text style={{ fontWeight: "bold", fontSize: 18, color: "blue" }}>
+              {dataAlumno?.UltimaSede || "-"}
+            </Text>
+          </Text>
+          <Text style={styles.dataTextSearch}>
+            <Text style={{ fontWeight: "bold", fontSize: 18 }}>
+              Último grado:{" "}
+            </Text>
+            <Text style={{ fontWeight: "bold", fontSize: 18, color: "blue" }}>
+              {dataAlumno?.UltimoGrado || "-"}
+            </Text>
+          </Text>
+          {dataAlumno?.Renap && (
+            <Text style={styles.dataTextSearch}>
+              <Text
+                style={{ fontWeight: "bold", fontSize: 18, color: "orange" }}
+              >
+                El alumno ya tiene guardado el proceso de lectura de RENAP. Si
+                continúa, se reemplazará la información almacenada.
+              </Text>
+            </Text>
+          )}
+        </View>
+        <TouchableHighlight
+          style={styles.buttonSearch}
+          underlayColor="#3366b3"
+          onPress={() =>
+            navigation.navigate("Home", { dataAlumno, carnet, user })
+          }
+        >
+          <View style={styles.buttonContent}>
+            <MaterialCommunityIcons
+              name="check-circle-outline"
+              size={28}
+              color="white"
+            />
+            <Text style={styles.buttonText}>Confirmar</Text>
+          </View>
+        </TouchableHighlight>
+      </View>
+    );
+  } catch (err) {
+    console.warn("Error renderizando datos del alumno:", err);
+    renderAlumno = (
+      <View style={styles.alumnoContainer}>
+        <Text style={{ color: "red", fontSize: 18, fontWeight: "bold" }}>
+          Error mostrando los datos del alumno. Por favor, contacte soporte.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Modal visible={loading} transparent animationType="fade">
@@ -202,125 +292,7 @@ export default function CarnetScreeen({ route, navigation }) {
             </TouchableHighlight>
           </>
         ) : (
-          <>
-            {/* Datos del alumno */}
-            <View style={styles.alumnoContainer}>
-              <View style={styles.headerRow}>
-                <Text style={styles.subtitleTextSearch}>Datos del alumno</Text>
-                <MaterialCommunityIcons
-                  name="pencil"
-                  size={28}
-                  color="#EA963E"
-                  onPress={() => setAlumno("")}
-                />
-              </View>
-
-              <View style={styles.infoContainer}>
-                <Text style={styles.dataTextSearch}>
-                  <Text style={{ fontWeight: "bold", fontSize: "18" }}>
-                    Carnet:{" "}
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "18",
-                      color: "blue",
-                    }}
-                  >
-                    {carnet}
-                  </Text>
-                </Text>
-                <Text style={styles.dataTextSearch}>
-                  <Text style={{ fontWeight: "bold", fontSize: "18" }}>
-                    Nombre:{" "}
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "18",
-                      color: "blue",
-                    }}
-                  >
-                    {dataAlumno.Alumno}
-                  </Text>
-                </Text>
-                <Text style={styles.dataTextSearch}>
-                  <Text style={{ fontWeight: "bold", fontSize: "18" }}>
-                    Último ciclo:{" "}
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "18",
-                      color: "blue",
-                    }}
-                  >
-                    {dataAlumno.UltimoCiclo}
-                  </Text>
-                </Text>
-                <Text style={styles.dataTextSearch}>
-                  <Text style={{ fontWeight: "bold", fontSize: "18" }}>
-                    Última sede:{" "}
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "18",
-                      color: "blue",
-                    }}
-                  >
-                    {dataAlumno.UltimaSede}
-                  </Text>
-                </Text>
-                <Text style={styles.dataTextSearch}>
-                  <Text style={{ fontWeight: "bold", fontSize: "18" }}>
-                    Último grado:{" "}
-                  </Text>
-                  <Text
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "18",
-                      color: "blue",
-                    }}
-                  >
-                    {dataAlumno.UltimoGrado}
-                  </Text>
-                </Text>
-                {dataAlumno.Renap && (
-                  <Text style={styles.dataTextSearch}>
-                    <Text
-                      style={{
-                        fontWeight: "bold",
-                        fontSize: "18",
-                        color: "orange",
-                      }}
-                    >
-                      El alumno ya tiene guardado el proceso de lectura de
-                      RENAP. Si continúa, se reemplazará la información
-                      almacenada.
-                    </Text>
-                  </Text>
-                )}
-              </View>
-
-              <TouchableHighlight
-                style={styles.buttonSearch}
-                underlayColor="#3366b3"
-                onPress={() =>
-                  navigation.navigate("Home", { dataAlumno, carnet, user })
-                }
-              >
-                <View style={styles.buttonContent}>
-                  <MaterialCommunityIcons
-                    name="check-circle-outline"
-                    size={28}
-                    color="white"
-                  />
-                  <Text style={styles.buttonText}>Confirmar</Text>
-                </View>
-              </TouchableHighlight>
-            </View>
-          </>
+          renderAlumno
         )}
       </View>
     </SafeAreaView>
