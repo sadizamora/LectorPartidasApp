@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect  } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   SafeAreaView,
   View,
@@ -9,21 +9,26 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { CameraView } from "expo-camera";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from "expo-file-system";
 import { API_URL, REACT_APP_API_HEADERS } from "@env";
 
 export default function CaptureScreen({ route, navigation }) {
-  const { datos, dataAlumno, carnet } = route.params;
+  const { datos, dataAlumno, carnet, user } = route.params;
   const cameraRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [base64Images, setBase64Images] = useState([]);
-  
+  const [loading, setLoading] = useState(false);
+  const [showAviso, setShowAviso] = useState(false);
+  const [mensajeAviso, setMensajeAviso] = useState("");
+  const [showCamera, setShowCamera] = useState(true);
+
   const takePhoto = async () => {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync({ base64: true });
@@ -40,8 +45,8 @@ export default function CaptureScreen({ route, navigation }) {
   };
 
   const handleConfirm = async () => {
-    console.log("Fotos confirmadas:", photos);
-
+    console.log("Carnet:", carnet);
+    setLoading(true);
     try {
       const encoded = await Promise.all(
         photos.map(async (photo) => {
@@ -51,37 +56,47 @@ export default function CaptureScreen({ route, navigation }) {
           return base64;
         })
       );
-      setBase64Images(encoded)
-      console.log(carnet);
+      setBase64Images(encoded);
       // Envía las imágenes al servidor
       const response = await fetch(`${API_URL}/schoolapi/utils/lectura_renap`, {
         method: "POST",
         headers: JSON.parse(REACT_APP_API_HEADERS),
         body: JSON.stringify({
-          IdEmp: "SZAMORAX01",
+          IdEmp: user.IdEmp,
           IpHost: "131.107.1.235",
           HostName: "DEV1",
           OS: "Windows",
-          Carnet:"01-2014-0146",
           FotoRenap: encoded[0],
           FotoRenap2: encoded[1],
-          Carnet: carnet
-        })
+          Carnet: carnet,
+        }),
       });
-
       const data = await response.json();
-      console.log('Respuesta del servidor:', data.msg);
-      if (data.msg.Error == 2005){
-        alert(data.msg.Mensaje);
+      if (data.msg.Error == 2005) {
+        setMensajeAviso(data.msg.Mensaje);
+        setShowAviso(true);
+        setLoading(false);
+        return;
       }
-      if (data.msg.Error == 0){
-        navigation.navigate("PhotoData", { dataAlumno, carnet, datos:data.msg })
+      if (data.msg.Error == 0) {
+        setLoading(false); // Cierra el modal antes de navegar
+        setShowPreview(false); // Opcional: desmonta la vista previa
+        setShowCamera(false); // desmonta la cámara
+        setTimeout(() => {
+          navigation.navigate("PhotoData", {
+            dataAlumno,
+            carnet,
+            datos: data.msg,
+            user,
+          });
+        }, 150); // espera a que la cámara se desmonte
+        return;
       }
-
+      setLoading(false);
     } catch (error) {
-      console.error('Error al convertir/enviar:', error);
+      setLoading(false);
+      console.error("Error al convertir/enviar:", error);
     }
-    
   };
 
   return (
@@ -89,12 +104,98 @@ export default function CaptureScreen({ route, navigation }) {
       <Modal visible={!!selectedImage} transparent={true} animationType="fade">
         <TouchableWithoutFeedback onPress={() => setSelectedImage(null)}>
           <View style={styles.fullscreenContainer}>
-            <Image source={{ uri: selectedImage }} style={styles.fullscreenImage} />
-            <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedImage(null)}>
+            <Image
+              source={{ uri: selectedImage }}
+              style={styles.fullscreenImage}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedImage(null)}
+            >
               <Text style={styles.closeButtonText}>Cerrar</Text>
             </TouchableOpacity>
           </View>
         </TouchableWithoutFeedback>
+      </Modal>
+
+      <Modal visible={loading} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 180,
+            }}
+          >
+            <ActivityIndicator size="large" color="#EA963E" />
+            <Text style={{ color: "#1B2635", marginTop: 10, fontSize: 18 }}>
+              Cargando...
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showAviso} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 220,
+            }}
+          >
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 10,
+              }}
+            >
+              Aviso
+            </Text>
+            <Text
+              style={{ color: "#1B2635", fontSize: 16, textAlign: "center" }}
+            >
+              {mensajeAviso}
+            </Text>
+            <TouchableHighlight
+              style={{
+                marginTop: 20,
+                backgroundColor: "#4782DA",
+                borderRadius: 8,
+                paddingVertical: 8,
+                paddingHorizontal: 24,
+              }}
+              underlayColor="#3366b3"
+              onPress={() => setShowAviso(false)}
+            >
+              <Text
+                style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+              >
+                Cerrar
+              </Text>
+            </TouchableHighlight>
+          </View>
+        </View>
       </Modal>
 
       {showPreview ? (
@@ -110,8 +211,8 @@ export default function CaptureScreen({ route, navigation }) {
             renderItem={({ item, index }) => (
               <View style={styles.thumbnailWrapper}>
                 <TouchableOpacity onPress={() => setSelectedImage(item)}>
-                  <Image source={{ uri: item }} style={styles.thumbnailLarge}/>                  
-                </TouchableOpacity>                
+                  <Image source={{ uri: item }} style={styles.thumbnailLarge} />
+                </TouchableOpacity>
                 <Text style={styles.thumbnailText}>
                   {index === 0 ? "Frente" : "Atrás"}
                 </Text>
@@ -139,21 +240,19 @@ export default function CaptureScreen({ route, navigation }) {
         </View>
       ) : (
         <>
-          <CameraView style={styles.cameraView} ref={cameraRef} />
+          {showCamera && !showPreview && (
+            <CameraView style={styles.cameraView} ref={cameraRef} />
+          )}
 
           <Text style={styles.helperText}>
             <MaterialCommunityIcons
               name={
-                photos.length === 0
-                  ? "numeric-1-circle"
-                  : "numeric-2-circle"
+                photos.length === 0 ? "numeric-1-circle" : "numeric-2-circle"
               }
               size={24}
               color="#fff"
             />
-            {photos.length === 0
-              ? "Frente"
-              : "Atras"}
+            {photos.length === 0 ? "Frente" : "Atras"}
           </Text>
 
           {photos.length > 0 && (
@@ -165,14 +264,17 @@ export default function CaptureScreen({ route, navigation }) {
                 showsHorizontalScrollIndicator={false}
                 pagingEnabled
                 renderItem={({ item, index }) => (
-                <View style={styles.thumbnailWrapper}>
-                  <TouchableOpacity onPress={() => setSelectedImage(item)}>                 
-                    <Image source={{ uri: item }}  style={styles.thumbnailSmall}/>
-                  </TouchableOpacity>                  
-                  <Text style={styles.thumbnailText}>
-                    {index === 0 ? "Frente" : "Atrás"}
-                  </Text>
-                </View>
+                  <View style={styles.thumbnailWrapper}>
+                    <TouchableOpacity onPress={() => setSelectedImage(item)}>
+                      <Image
+                        source={{ uri: item }}
+                        style={styles.thumbnailSmall}
+                      />
+                    </TouchableOpacity>
+                    <Text style={styles.thumbnailText}>
+                      {index === 0 ? "Frente" : "Atrás"}
+                    </Text>
+                  </View>
                 )}
               />
             </View>
@@ -197,7 +299,7 @@ export default function CaptureScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1B2635",    
+    backgroundColor: "#1B2635",
   },
   cameraView: {
     flex: 1,
@@ -241,22 +343,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#1B2635",
-    paddingHorizontal:5,
-    margin:5
+    paddingHorizontal: 5,
+    margin: 5,
   },
   title: {
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
-    paddingTop:20
+    paddingTop: 20,
   },
   thumbnailWrapper: {
     alignItems: "center",
     justifyContent: "center",
     width: "250",
     paddingHorizontal: 5,
-    marginHorizontal:5
-  },  
+    marginHorizontal: 5,
+  },
   thumbnailText: {
     color: "#fff",
     fontSize: 12,
@@ -265,15 +367,15 @@ const styles = StyleSheet.create({
   },
   previewButtons: {
     flexDirection: "row",
-    justifyContent: "space-around",    
+    justifyContent: "space-around",
     width: "100%",
-    paddingBottom: 20
+    paddingBottom: 20,
   },
   repeatButton: {
     backgroundColor: "#4782DA",
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 10
+    borderRadius: 10,
   },
   confirmButton: {
     backgroundColor: "#4782DA",
@@ -295,7 +397,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "orange",
     marginHorizontal: 10,
-    
   },
   thumbnailSmall: {
     width: 120,
@@ -329,5 +430,4 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "bold",
   },
-  
 });
