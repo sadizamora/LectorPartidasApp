@@ -28,32 +28,32 @@ export default function App() {
         <Stack.Screen name="Login" options={{ title: "" }} component={Login} />
         <Stack.Screen
           name="Carnet"
-          options={{ title: "Carnet" }}
+          options={{ title: "Búsqueda de alumno" }}
           component={Carnet}
         />
         <Stack.Screen
           name="Home"
-          options={{ title: "Lector de partidas" }}
+          options={{ title: "Lectura de documentos" }}
           component={HomeScreen}
         />
         <Stack.Screen
           name="QRScanner"
-          options={{ title: "Scanner" }}
+          options={{ title: "Lectura CIP QR" }}
           component={QRScannerScreen}
         />
         <Stack.Screen
           name="QRResult"
-          options={{ title: "Resultado" }}
+          options={{ title: "Resultado lectura RENAP" }}
           component={QRResultScreen}
         />
         <Stack.Screen
           name="Camera"
-          options={{ title: "Camara" }}
+          options={{ title: "Lectura certificado RENAP" }}
           component={CameraScreen}
         />
         <Stack.Screen
           name="PhotoData"
-          options={{ title: "Resultado" }}
+          options={{ title: "Resultado lectura CIP QR" }}
           component={PhotoDataScreen}
         />
       </Stack.Navigator>

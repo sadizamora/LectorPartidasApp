@@ -71,7 +71,7 @@ export default function HomeScreen({ navigation, route }) {
         <View style={styles.headerRow}>
           <Text style={styles.subtitleText}>CARNET {carnet}</Text>
           <TouchableWithoutFeedback
-            onPress={() => navigation.navigate("Carnet")}
+            onPress={() => navigation.navigate("Carnet", { user })}
           >
             <MaterialCommunityIcons name="pencil" size={28} color="#EA963E" />
           </TouchableWithoutFeedback>
@@ -97,7 +97,7 @@ export default function HomeScreen({ navigation, route }) {
               size={28}
               color="#fff"
             />
-            <Text style={styles.buttonText}>RENAP</Text>
+            <Text style={styles.buttonText}>Certificado RENAP</Text>
           </View>
         </TouchableHighlight>
 
@@ -106,7 +106,7 @@ export default function HomeScreen({ navigation, route }) {
           style={styles.button}
           underlayColor="#3366b3"
           onPress={() =>
-            navigation.navigate("QRScanner", { dataAlumno, carnet })
+            navigation.navigate("QRScanner", { dataAlumno, carnet, user })
           }
         >
           <View style={styles.buttonContent}>
@@ -115,7 +115,7 @@ export default function HomeScreen({ navigation, route }) {
               size={28}
               color="#fff"
             />
-            <Text style={styles.buttonText}>Escanear CIP</Text>
+            <Text style={styles.buttonText}>Escanear CIP - QR</Text>
           </View>
         </TouchableHighlight>
       </View>
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#FFFFFF",
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: "600",
     marginLeft: 10,
   },

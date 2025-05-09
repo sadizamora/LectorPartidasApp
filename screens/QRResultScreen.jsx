@@ -17,7 +17,7 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function QRResultScreen({ route, navigation }) {
-  const { scannedData, carnet, dataAlumno } = route.params;
+  const { scannedData, carnet, dataAlumno, user } = route.params;
   console.log("Datos escaneados:", scannedData);
 
   const validacion = scannedData.Mensaje.Validacion;
@@ -70,7 +70,7 @@ export default function QRResultScreen({ route, navigation }) {
       check: true,
     },
     {
-      label: "Fecha de nacimiento",
+      label: "Fecha de Nacimiento",
       path: ["fecha_nacimiento"],
       v: validacion.fecha_nacimiento,
       DatoRenap: validacion.fecha_nacimiento.DatoRenap,
@@ -79,7 +79,7 @@ export default function QRResultScreen({ route, navigation }) {
       check: true,
     },
     {
-      label: "Genero",
+      label: "Género",
       path: ["genero"],
       v: validacion.genero,
       DatoRenap: validacion.genero.DatoRenap,
@@ -112,6 +112,9 @@ export default function QRResultScreen({ route, navigation }) {
 
   // Estado para mostrar el modal de éxito
   const [showExito, setShowExito] = useState(false);
+
+  // Estado para mostrar el modal de confirmación
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Cambia la selección de checkbox para un campo
   const handleSeleccion = (campo, valor) => {
@@ -155,7 +158,7 @@ export default function QRResultScreen({ route, navigation }) {
       <Text style={styles.label}>{label}</Text>
       <View style={styles.columna}>
         <Text style={styles.renap}>CIP QR: {cip || "—"}</Text>
-        <Text style={styles.db}>DB: {db || "—"}</Text>
+        <Text style={styles.db}>REVISION #2: {db || "—"}</Text>
         {check && (
           <View
             style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
@@ -179,21 +182,21 @@ export default function QRResultScreen({ route, navigation }) {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => handleSeleccion(label, "DB")}
+              onPress={() => handleSeleccion(label, "REVISION#2")}
               underlayColor="#eee"
               style={{ borderRadius: 12 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialCommunityIcons
                   name={
-                    seleccion[label] === "DB"
+                    seleccion[label] === "REVISION#2"
                       ? "checkbox-marked"
                       : "checkbox-blank-outline"
                   }
                   size={22}
                   color="#EA963E"
                 />
-                <Text style={{ marginLeft: 4 }}>DB</Text>
+                <Text style={{ marginLeft: 4 }}>REVISION#2</Text>
               </View>
             </TouchableHighlight>
           </View>
@@ -207,17 +210,22 @@ export default function QRResultScreen({ route, navigation }) {
 
   const handleSave = async () => {
     const incompletos = Object.values(seleccion).some(
-      (v) => v !== "CIP" && v !== "DB"
+      (v) => v !== "CIP" && v !== "REVISION#2"
     );
     if (incompletos) {
       setMensajeAviso(
-        "Debes seleccionar CIP o DB en todos los campos antes de finalizar."
+        "Debes seleccionar CIP o REVISION#2 en todos los campos antes de finalizar."
       );
       setShowAviso(true);
       return;
     }
+    setShowConfirm(true); // Mostrar modal de confirmación
+  };
+
+  // Nueva función para confirmar y enviar el POST
+  const handleConfirmSave = async () => {
+    setShowConfirm(false);
     setLoading(true);
-    // Forzar un pequeño retraso para mostrar el modal de cargando
     setTimeout(async () => {
       const datosSeleccionados = campos.map(({ label, path }) => {
         const tipo = seleccion[label];
@@ -227,21 +235,34 @@ export default function QRResultScreen({ route, navigation }) {
         return { campo: label, tipo, valor };
       });
       try {
-        const response = await fetch("https://tu-api.com/endpoint", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            datos: datosSeleccionados,
-            carnet,
-            dataAlumno,
-          }),
-        });
-        if (!response.ok) {
-          throw new Error("Error en la respuesta del servidor");
-        }
+        const response = await fetch(
+          `${API_URL}/schoolapi/utils/confirma_renap`,
+          {
+            method: "POST",
+            headers: JSON.parse(REACT_APP_API_HEADERS),
+            body: JSON.stringify({
+              Opcion: 2,
+              IdEmp: user.IdEmp,
+              IpHost: "131.107.1.235",
+              HostName: "DEV1",
+              OS: "Windows",
+              Detalle: datosSeleccionados,
+              Carnet: carnet,
+            }),
+          }
+        );
         const data = await response.json();
-        setLoading(false);
-        setShowExito(true);
+        if (data.msg.Error !== "0") {
+          setMensajeAviso("Error al guardar los datos.");
+          setLoading(false);
+          setShowAviso(true);
+        } else {
+          console.log("Respuesta update revisión 2:", data);
+          setLoading(false);
+          setTimeout(() => {
+            setShowExito(true);
+          }, 100);
+        }
       } catch (error) {
         setLoading(false);
         setMensajeAviso(
@@ -382,7 +403,7 @@ export default function QRResultScreen({ route, navigation }) {
                 navigation.navigate("Home", {
                   dataAlumno,
                   carnet,
-                  datosSeleccionados,
+                  user,
                 });
               }}
             >
@@ -395,9 +416,81 @@ export default function QRResultScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+      {/* Modal de confirmación antes de guardar */}
+      <Modal visible={showConfirm} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 220,
+            }}
+          >
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 10,
+              }}
+            >
+              Confirmación
+            </Text>
+            <Text
+              style={{ color: "#1B2635", fontSize: 16, textAlign: "center" }}
+            >
+              ¿Estás seguro de guardar los datos seleccionados?
+            </Text>
+            <View style={{ flexDirection: "row", marginTop: 20 }}>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#4782DA",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                  marginRight: 10,
+                }}
+                underlayColor="#3366b3"
+                onPress={handleConfirmSave}
+              >
+                <Text
+                  style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Aceptar
+                </Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#aaa",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                }}
+                underlayColor="#888"
+                onPress={() => setShowConfirm(false)}
+              >
+                <Text
+                  style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Cancelar
+                </Text>
+              </TouchableHighlight>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerRow}>
-          <Text style={styles.titulo}>Datos CIP QR vs Sistema</Text>
+          <Text style={styles.titulo}>{"Datos CIP QR\nvs Revisión #2"}</Text>
           <View style={styles.checkboxesHeader}>
             <TouchableHighlight
               onPress={() => handleSeleccionGlobal("CIP")}
@@ -418,21 +511,23 @@ export default function QRResultScreen({ route, navigation }) {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => handleSeleccionGlobal("DB")}
+              onPress={() => handleSeleccionGlobal("REVISION#2")}
               underlayColor="#eee"
               style={{ borderRadius: 12 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialCommunityIcons
                   name={
-                    seleccionGlobal === "DB"
+                    seleccionGlobal === "REVISION#2"
                       ? "checkbox-marked"
                       : "checkbox-blank-outline"
                   }
                   size={22}
                   color="#EA963E"
                 />
-                <Text style={{ marginLeft: 4, color: "white" }}>Todos DB</Text>
+                <Text style={{ marginLeft: 4, color: "white" }}>
+                  Todos REVISION#2
+                </Text>
               </View>
             </TouchableHighlight>
           </View>
@@ -458,7 +553,7 @@ export default function QRResultScreen({ route, navigation }) {
           <TouchableHighlight
             style={styles.button}
             onPress={() =>
-              navigation.navigate("QRScanner", { scannedData, carnet })
+              navigation.navigate("QRScanner", { scannedData, carnet, user })
             }
           >
             <View style={styles.buttonContent}>
@@ -484,11 +579,13 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     marginBottom: 10,
   },
   checkboxesHeader: {
-    flexDirection: "row",
+    flexDirection: "column",
+    alignItems: "center",
+    marginLeft: 20,
   },
   titulo: {
     color: "white",
@@ -497,7 +594,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#EA963E",
     borderBottomWidth: 1,
     paddingBottom: 10,
-    marginBottom: 10,
+    marginBottom: 0,
+    textAlign: "center",
   },
   fila: {
     backgroundColor: "#fff",

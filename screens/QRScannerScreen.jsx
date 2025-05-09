@@ -12,7 +12,7 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function QRScannerScreen({ route, navigation }) {
-  const { dataAlumno, carnet } = route.params;
+  const { dataAlumno, carnet, user } = route.params;
   const [scanned, setScanned] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,9 @@ export default function QRScannerScreen({ route, navigation }) {
             data +
             "&Carnet=" +
             carnet +
-            "&IdEmp=SZAMORAX01&IpHost=131.107.1.235&HostName=DEV&OS=Windows",
+            "&IdEmp=" +
+            user.IdEmp +
+            "&IpHost=131.107.1.235&HostName=DEV&OS=Windows",
           {
             headers: JSON.parse(REACT_APP_API_HEADERS),
           }
@@ -49,6 +51,7 @@ export default function QRScannerScreen({ route, navigation }) {
               dataAlumno,
               carnet,
               scannedData: response.msg,
+              user,
             });
           })
           .catch((err) => {

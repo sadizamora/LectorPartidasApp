@@ -161,10 +161,13 @@ export default function CarnetScreeen({ route, navigation }) {
         {!dataAlumno ? (
           <>
             {/* Campo de búsqueda */}
+            <Text style={styles.subtitleTextSearch}>
+              Ingresa el carnet que deseas trabajar
+            </Text>
             <View style={styles.searchInputView}>
               <TextInput
                 style={styles.searchTextInput}
-                placeholder="Ingrese el carnet"
+                placeholder="Ingresa carnet a buscar"
                 placeholderTextColor="#9597a6"
                 keyboardType="numeric"
                 value={carnet}
@@ -328,7 +331,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   searchInputView: {
-    width: "50%",
+    width: "60%",
     marginBottom: 20,
     marginTop: 40,
   },
@@ -366,7 +369,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: "600",
     marginLeft: 10,
   },

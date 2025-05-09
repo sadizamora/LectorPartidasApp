@@ -79,14 +79,14 @@ export default function App({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="light" />
       <Image style={styles.image} source={logoApp} />
-      <Text style={styles.banner}>Login</Text>
+      <Text style={styles.banner}>Lectura de documentos AG</Text>
       <View style={styles.loginContainer}>
         <View style={styles.inputView}>
           <Text style={styles.labelText}>Usuario</Text>
           <TextInput
             style={styles.textInput}
             placeholderTextColor="#9597a6"
-            placeholder="ingrese nombre de usuario"
+            placeholder="Ingresa tu nombre de usuario"
             onChangeText={(value) =>
               setCredentials((curr) => ({ ...curr, username: value }))
             }
@@ -143,7 +143,7 @@ export default function App({ navigation }) {
               style={{ marginRight: 5 }}
             />
           </TouchableWithoutFeedback>
-          <Text style={{ color: "#9597a6" }}>Recordarme</Text>
+          <Text style={{ color: "#9597a6", fontSize: 22 }}>Recordarme</Text>
         </View>
 
         <TouchableOpacity
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     marginLeft: 5,
-    fontSize: 16,
+    fontSize: 22,
     height: 34,
     width: "100%",
   },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   labelText: {
     color: "#9597a6",
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 22,
     marginBottom: 5,
   },
   inputView: {
@@ -307,6 +307,6 @@ const styles = StyleSheet.create({
   textButton: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 22,
   },
 });

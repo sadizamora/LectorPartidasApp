@@ -264,6 +264,7 @@ const ComparacionView = ({ route, navigation }) => {
   const [showExito, setShowExito] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mensajeAviso, setMensajeAviso] = useState("");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // Cambia la selección de checkbox para un campo
   const handleSeleccion = (campo, valor) => {
@@ -298,12 +299,12 @@ const ComparacionView = ({ route, navigation }) => {
     });
   };
 
-  const renderCampo = (label, renap, db, esValido, check) => (
+  const renderCampo = (label, renap, revision2, esValido, check) => (
     <View style={styles.fila} key={label}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.columna}>
         <Text style={styles.renap}>RENAP: {renap || "—"}</Text>
-        <Text style={styles.db}>DB: {db || "—"}</Text>
+        <Text style={styles.db}>REVISION#2: {revision2 || "—"}</Text>
         {check && (
           <View
             style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
@@ -327,21 +328,21 @@ const ComparacionView = ({ route, navigation }) => {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => handleSeleccion(label, "DB")}
+              onPress={() => handleSeleccion(label, "REVISION#2")}
               underlayColor="#eee"
               style={{ borderRadius: 12 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialCommunityIcons
                   name={
-                    seleccion[label] === "DB"
+                    seleccion[label] === "REVISION#2"
                       ? "checkbox-marked"
                       : "checkbox-blank-outline"
                   }
                   size={22}
                   color="#EA963E"
                 />
-                <Text style={{ marginLeft: 4 }}>DB</Text>
+                <Text style={{ marginLeft: 4 }}>REVISION#2</Text>
               </View>
             </TouchableHighlight>
           </View>
@@ -355,15 +356,20 @@ const ComparacionView = ({ route, navigation }) => {
 
   const handleSave = async () => {
     const incompletos = Object.values(seleccion).some(
-      (v) => v !== "RENAP" && v !== "DB"
+      (v) => v !== "RENAP" && v !== "REVISION#2"
     );
     if (incompletos) {
       setMensajeAviso(
-        "Debes seleccionar RENAP o DB en todos los campos antes de finalizar."
+        "Debes seleccionar RENAP o REVISION#2 en todos los campos antes de finalizar."
       );
       setShowAviso(true);
       return;
     }
+    setShowConfirm(true); // Mostrar modal de confirmación
+  };
+
+  const handleConfirmSave = async () => {
+    setShowConfirm(false);
     setLoading(true);
     const datosSeleccionados = campos.map(({ label, path }) => {
       const tipo = seleccion[label];
@@ -379,6 +385,7 @@ const ComparacionView = ({ route, navigation }) => {
           method: "POST",
           headers: JSON.parse(REACT_APP_API_HEADERS),
           body: JSON.stringify({
+            Opcion: 1,
             IdEmp: user.IdEmp,
             IpHost: "131.107.1.235",
             HostName: "DEV1",
@@ -535,7 +542,7 @@ const ComparacionView = ({ route, navigation }) => {
               onPress={() => {
                 setShowExito(false);
                 setTimeout(() => {
-                  navigation.navigate("Carnet", { user });
+                  navigation.navigate("Home", { dataAlumno, carnet, user });
                 }, 100);
               }}
             >
@@ -548,18 +555,82 @@ const ComparacionView = ({ route, navigation }) => {
           </View>
         </View>
       </Modal>
-      <ScrollView contentContainerStyle={styles.container}>
+      {/* Modal de confirmación antes de guardar */}
+      <Modal visible={showConfirm} transparent animationType="fade">
         <View
           style={{
-            flexDirection: "row",
+            flex: 1,
+            justifyContent: "center",
             alignItems: "center",
-            marginBottom: 10,
+            backgroundColor: "rgba(0,0,0,0.2)",
           }}
         >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.titulo}>Datos RENAP vs Sistema</Text>
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 220,
+            }}
+          >
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 10,
+              }}
+            >
+              Confirmación
+            </Text>
+            <Text
+              style={{ color: "#1B2635", fontSize: 16, textAlign: "center" }}
+            >
+              ¿Estás seguro de guardar los datos seleccionados?
+            </Text>
+            <View style={{ flexDirection: "row", marginTop: 20 }}>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#4782DA",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                  marginRight: 10,
+                }}
+                underlayColor="#3366b3"
+                onPress={handleConfirmSave}
+              >
+                <Text
+                  style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Aceptar
+                </Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#aaa",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                }}
+                underlayColor="#888"
+                onPress={() => setShowConfirm(false)}
+              >
+                <Text
+                  style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+                >
+                  Cancelar
+                </Text>
+              </TouchableHighlight>
+            </View>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
+        </View>
+      </Modal>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerRow}>
+          <Text style={styles.titulo}>{"Datos RENAP\nvs Sistema"}</Text>
+          <View style={styles.checkboxesHeader}>
             <TouchableHighlight
               onPress={() => handleSeleccionGlobal("RENAP")}
               underlayColor="#eee"
@@ -581,21 +652,23 @@ const ComparacionView = ({ route, navigation }) => {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => handleSeleccionGlobal("DB")}
+              onPress={() => handleSeleccionGlobal("REVISION#2")}
               underlayColor="#eee"
               style={{ borderRadius: 12 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialCommunityIcons
                   name={
-                    seleccionGlobal === "DB"
+                    seleccionGlobal === "REVISION#2"
                       ? "checkbox-marked"
                       : "checkbox-blank-outline"
                   }
                   size={22}
                   color="#EA963E"
                 />
-                <Text style={{ marginLeft: 4, color: "white" }}>Todos DB</Text>
+                <Text style={{ marginLeft: 4, color: "white" }}>
+                  Todos REVISION#2
+                </Text>
               </View>
             </TouchableHighlight>
           </View>
@@ -618,7 +691,9 @@ const ComparacionView = ({ route, navigation }) => {
 
           <TouchableHighlight
             style={styles.button}
-            onPress={() => navigation.navigate("Home", { dataAlumno, carnet })}
+            onPress={() =>
+              navigation.navigate("Home", { dataAlumno, carnet, user })
+            }
           >
             <View style={styles.buttonContent}>
               <MaterialCommunityIcons name="camera" size={24} color="white" />
@@ -640,15 +715,22 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 20,
     fontWeight: "bold",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     borderBottomColor: "#EA963E",
     borderBottomWidth: 1,
     paddingBottom: 10,
+    marginBottom: 0,
+    textAlign: "center",
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 10,
-    width: "100%",
-    gap: 10, // solo si tu versión de React Native lo soporta
+  },
+  checkboxesHeader: {
+    flexDirection: "column",
+    alignItems: "center",
+    marginLeft: 20,
   },
   fila: {
     backgroundColor: "#fff",
