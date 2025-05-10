@@ -90,7 +90,7 @@ export default function App({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="light" />
       <Image style={styles.image} source={logoApp} />
-      <Text style={styles.banner}>Lectura de documentos AG</Text>
+      <Text style={styles.banner}>{"Lectura de\ndocumentos AG"}</Text>
       <View style={styles.loginContainer}>
         <View style={styles.inputView}>
           <Text style={styles.labelText}>Usuario</Text>
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   },
   banner: {
     color: "#fff",
-    fontSize: 30,
+    fontSize: 28,
     fontWeight: "bold",
     flexDirection: "row",
     alignItems: "center",
