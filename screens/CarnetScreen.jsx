@@ -266,7 +266,7 @@ export default function CarnetScreeen({ route, navigation }) {
             <View style={styles.searchInputView}>
               <TextInput
                 style={styles.searchTextInput}
-                placeholder="Ingresa carnet a buscar"
+                placeholder="Ingresa carnet"
                 placeholderTextColor="#9597a6"
                 keyboardType="numeric"
                 value={carnet}
