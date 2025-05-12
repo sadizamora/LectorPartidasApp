@@ -43,7 +43,7 @@ export default function App() {
         />
         <Stack.Screen
           name="QRResult"
-          options={{ title: "Resultado lectura RENAP" }}
+          options={{ title: "Resultado lectura CIP QR" }}
           component={QRResultScreen}
         />
         <Stack.Screen
@@ -53,7 +53,7 @@ export default function App() {
         />
         <Stack.Screen
           name="PhotoData"
-          options={{ title: "Resultado lectura CIP QR" }}
+          options={{ title: "Resultado certificado RENAP" }}
           component={PhotoDataScreen}
         />
       </Stack.Navigator>

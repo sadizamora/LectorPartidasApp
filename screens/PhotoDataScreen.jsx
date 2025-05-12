@@ -304,7 +304,7 @@ const ComparacionView = ({ route, navigation }) => {
       <Text style={styles.label}>{label}</Text>
       <View style={styles.columna}>
         <Text style={styles.renap}>RENAP: {renap || "—"}</Text>
-        <Text style={styles.db}>REVISION#2: {revision2 || "—"}</Text>
+        <Text style={styles.db}>DB: {revision2 || "—"}</Text>
         {check && (
           <View
             style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
@@ -328,21 +328,21 @@ const ComparacionView = ({ route, navigation }) => {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => handleSeleccion(label, "REVISION#2")}
+              onPress={() => handleSeleccion(label, "DB")}
               underlayColor="#eee"
               style={{ borderRadius: 12 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialCommunityIcons
                   name={
-                    seleccion[label] === "REVISION#2"
+                    seleccion[label] === "DB"
                       ? "checkbox-marked"
                       : "checkbox-blank-outline"
                   }
                   size={22}
                   color="#EA963E"
                 />
-                <Text style={{ marginLeft: 4 }}>REVISION#2</Text>
+                <Text style={{ marginLeft: 4 }}>DB</Text>
               </View>
             </TouchableHighlight>
           </View>
@@ -356,11 +356,11 @@ const ComparacionView = ({ route, navigation }) => {
 
   const handleSave = async () => {
     const incompletos = Object.values(seleccion).some(
-      (v) => v !== "RENAP" && v !== "REVISION#2"
+      (v) => v !== "RENAP" && v !== "DB"
     );
     if (incompletos) {
       setMensajeAviso(
-        "Debes seleccionar RENAP o REVISION#2 en todos los campos antes de finalizar."
+        "Debes seleccionar RENAP o DB en todos los campos antes de finalizar."
       );
       setShowAviso(true);
       return;
@@ -652,23 +652,21 @@ const ComparacionView = ({ route, navigation }) => {
               </View>
             </TouchableHighlight>
             <TouchableHighlight
-              onPress={() => handleSeleccionGlobal("REVISION#2")}
+              onPress={() => handleSeleccionGlobal("DB")}
               underlayColor="#eee"
               style={{ borderRadius: 12 }}
             >
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <MaterialCommunityIcons
                   name={
-                    seleccionGlobal === "REVISION#2"
+                    seleccionGlobal === "DB"
                       ? "checkbox-marked"
                       : "checkbox-blank-outline"
                   }
                   size={22}
                   color="#EA963E"
                 />
-                <Text style={{ marginLeft: 4, color: "white" }}>
-                  Todos REVISION#2
-                </Text>
+                <Text style={{ marginLeft: 4, color: "white" }}>Todos DB</Text>
               </View>
             </TouchableHighlight>
           </View>

@@ -136,7 +136,7 @@ export default function CarnetScreeen({ route, navigation }) {
               {dataAlumno?.UltimoGrado || "-"}
             </Text>
           </Text>
-          {dataAlumno?.Renap && (
+          {dataAlumno?.Renap > 0 && (
             <Text style={styles.dataTextSearch}>
               <Text
                 style={{ fontWeight: "bold", fontSize: 18, color: "orange" }}
@@ -353,7 +353,7 @@ export default function CarnetScreeen({ route, navigation }) {
                   {dataAlumno?.UltimoGrado || "-"}
                 </Text>
               </Text>
-              {dataAlumno?.Renap && (
+              {dataAlumno?.Renap > 0 && (
                 <Text style={styles.dataTextSearch}>
                   <Text
                     style={{
