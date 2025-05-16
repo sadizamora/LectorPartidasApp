@@ -8,6 +8,8 @@ import CameraScreen from "./screens/CameraScreen";
 import PhotoDataScreen from "./screens/PhotoDataScreen";
 import Login from "./screens/LoginScreen";
 import Carnet from "./screens/CarnetScreen";
+import QRCertEstudiosScreen from "./screens/QRCertEstudiosScreen";
+import QRResultCertScreen from "./screens/QRResultCertScreen";
 import { StatusBar } from "expo-status-bar";
 
 const Stack = createNativeStackNavigator();
@@ -55,6 +57,16 @@ export default function App() {
           name="PhotoData"
           options={{ title: "Resultado certificado RENAP" }}
           component={PhotoDataScreen}
+        />
+        <Stack.Screen
+          name="QRCertEstudios"
+          options={{ title: "Lectura certificados estudios" }}
+          component={QRCertEstudiosScreen}
+        />
+        <Stack.Screen
+          name="QRResultEstudios"
+          options={{ title: "Resultado lectura certificados" }}
+          component={QRResultCertScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

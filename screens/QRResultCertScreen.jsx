@@ -1,12 +1,9 @@
-// screens/QRResultScreen.js
 import { useState } from "react";
 import {
   View,
   Text,
-  SafeAreaView,
   TouchableHighlight,
   StyleSheet,
-  TouchableWithoutFeedback,
   ScrollView,
   Modal,
   ActivityIndicator,
@@ -16,90 +13,10 @@ import Constants from "expo-constants";
 
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
-export default function QRResultScreen({ route, navigation }) {
-  const { scannedData, carnet, dataAlumno, user } = route.params;
-  console.log("Datos escaneados:", scannedData);
+export default function QRResultCertScreen({ route, navigation }) {
+  const { scannedData, carnet, dataAlumno, user, url } = route.params;
 
-  const validacion = scannedData.Mensaje.Validacion;
-
-  // Lista de campos a mostrar con path dinámico y valor v
-  const campos = [
-    {
-      label: "CIP",
-      path: ["cip"],
-      v: validacion.cip,
-      DatoRenap: validacion.cip.DatoRenap,
-      DatoDB: validacion.cip.DatoDB,
-      Validacion: validacion.cip.Validacion,
-      check: true,
-    },
-    {
-      label: "Nombre Completo",
-      path: ["nombre_completo"],
-      v: validacion.nombre_completo,
-      DatoRenap: validacion.nombre_completo.DatoRenap,
-      DatoDB: validacion.nombre_completo.DatoDB,
-      Validacion: validacion.nombre_completo.Validacion,
-      check: false,
-    },
-    {
-      label: "Nombres",
-      path: ["nombres_apellidos", "nombres"],
-      v: validacion.nombres_apellidos.nombres,
-      DatoRenap: validacion.nombres_apellidos.nombres.DatoRenap,
-      DatoDB: validacion.nombres_apellidos.nombres.DatoDB,
-      Validacion: validacion.nombres_apellidos.nombres.Validacion,
-      check: true,
-    },
-    {
-      label: "Apellidos",
-      path: ["nombres_apellidos", "apellidos"],
-      v: validacion.nombres_apellidos.apellidos,
-      DatoRenap: validacion.nombres_apellidos.apellidos.DatoRenap,
-      DatoDB: validacion.nombres_apellidos.apellidos.DatoDB,
-      Validacion: validacion.nombres_apellidos.apellidos.Validacion,
-      check: true,
-    },
-    {
-      label: "CUI",
-      path: ["cui"],
-      v: validacion.cui,
-      DatoRenap: validacion.cui.DatoRenap,
-      DatoDB: validacion.cui.DatoDB,
-      Validacion: validacion.cui.Validacion,
-      check: true,
-    },
-    {
-      label: "Fecha de Nacimiento",
-      path: ["fecha_nacimiento"],
-      v: validacion.fecha_nacimiento,
-      DatoRenap: validacion.fecha_nacimiento.DatoRenap,
-      DatoDB: validacion.fecha_nacimiento.DatoDB,
-      Validacion: validacion.fecha_nacimiento.Validacion,
-      check: true,
-    },
-    {
-      label: "Género",
-      path: ["genero"],
-      v: validacion.genero,
-      DatoRenap: validacion.genero.DatoRenap,
-      DatoDB: validacion.genero.DatoDB,
-      Validacion: validacion.genero.Validacion,
-      check: true,
-    },
-  ];
-
-  // Estado para selección de checkbox por campo
-  const [seleccion, setSeleccion] = useState(() => {
-    // Por defecto todos CIP
-    const obj = {};
-    campos.forEach((c) => {
-      obj[c.label] = "CIP";
-    });
-    return obj;
-  });
-  // Estado para selección global
-  const [seleccionGlobal, setSeleccionGlobal] = useState("CIP");
+  const certificado = scannedData;
 
   // Estado para mostrar el modal de aviso
   const [showAviso, setShowAviso] = useState(false);
@@ -116,106 +33,17 @@ export default function QRResultScreen({ route, navigation }) {
   // Estado para mostrar el modal de confirmación
   const [showConfirm, setShowConfirm] = useState(false);
 
-  // Cambia la selección de checkbox para un campo
-  const handleSeleccion = (campo, valor) => {
-    setSeleccion((prev) => {
-      // Si ya está seleccionado, desmarcar (dejar vacío)
-      if (prev[campo] === valor) {
-        return { ...prev, [campo]: undefined };
-      } else {
-        return { ...prev, [campo]: valor };
-      }
-    });
-    setSeleccionGlobal(null); // Si el usuario toca individual, desmarca global
-  };
-
-  // Cambia la selección global
-  const handleSeleccionGlobal = (valor) => {
-    setSeleccionGlobal((prev) => {
-      // Si ya está seleccionado, desmarcar todos
-      if (prev === valor) {
-        // Desmarcar todos los campos
-        const nuevo = {};
-        campos.forEach((c) => {
-          nuevo[c.label] = undefined;
-        });
-        setSeleccion(nuevo);
-        return null;
-      } else {
-        // Marca todos los campos con el valor seleccionado
-        const nuevo = {};
-        campos.forEach((c) => {
-          nuevo[c.label] = valor;
-        });
-        setSeleccion(nuevo);
-        return valor;
-      }
-    });
-  };
-
-  const renderCampo = (label, cip, db, esValido, check) => (
-    <View style={styles.fila} key={label}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={styles.columna}>
-        <Text style={styles.renap}>CIP QR: {cip || "—"}</Text>
-        <Text style={styles.db}>REVISION #2: {db || "—"}</Text>
-        {check && (
-          <View
-            style={{ flexDirection: "row", alignItems: "center", marginTop: 4 }}
-          >
-            <TouchableHighlight
-              onPress={() => handleSeleccion(label, "CIP")}
-              underlayColor="#eee"
-              style={{ marginRight: 10, borderRadius: 12 }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <MaterialCommunityIcons
-                  name={
-                    seleccion[label] === "CIP"
-                      ? "checkbox-marked"
-                      : "checkbox-blank-outline"
-                  }
-                  size={22}
-                  color="#4782DA"
-                />
-                <Text style={{ marginLeft: 4 }}>CIP</Text>
-              </View>
-            </TouchableHighlight>
-            <TouchableHighlight
-              onPress={() => handleSeleccion(label, "REVISION#2")}
-              underlayColor="#eee"
-              style={{ borderRadius: 12 }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <MaterialCommunityIcons
-                  name={
-                    seleccion[label] === "REVISION#2"
-                      ? "checkbox-marked"
-                      : "checkbox-blank-outline"
-                  }
-                  size={22}
-                  color="#EA963E"
-                />
-                <Text style={{ marginLeft: 4 }}>REVISION#2</Text>
-              </View>
-            </TouchableHighlight>
-          </View>
-        )}
-      </View>
-      <Text style={[styles.estado, { color: esValido ? "green" : "red" }]}>
-        {esValido ? "✔" : "✘"}
-      </Text>
-    </View>
-  );
+  // Estado para controlar si se permite continuar después del modal de validaciones
+  const [puedeContinuar, setPuedeContinuar] = useState(false);
 
   const handleSave = async () => {
-    const incompletos = Object.values(seleccion).some(
-      (v) => v !== "CIP" && v !== "REVISION#2"
-    );
-    if (incompletos) {
-      setMensajeAviso(
-        "Debes seleccionar CIP o REVISION#2 en todos los campos antes de finalizar."
-      );
+    // Si hay mensajes de validación no vacíos, mostrar en el modal de confirmación
+    const mensajes = (certificado.validaciones || [])
+      .map((v) => v.Mensaje && v.Mensaje.trim())
+      .filter((msg) => msg && msg !== "");
+    if (mensajes.length > 0) {
+      setMensajeAviso(mensajes.join("\n"));
+      setPuedeContinuar(true); // Permitir continuar después del modal
       setShowAviso(true);
       return;
     }
@@ -227,26 +55,19 @@ export default function QRResultScreen({ route, navigation }) {
     setShowConfirm(false);
     setLoading(true);
     setTimeout(async () => {
-      const datosSeleccionados = campos.map(({ label, path }) => {
-        const tipo = seleccion[label];
-        let obj = validacion;
-        for (const p of path) obj = obj[p];
-        const valor = tipo === "CIP" ? obj.DatoRenap : obj.DatoDB;
-        return { campo: label, tipo, valor };
-      });
       try {
         const response = await fetch(
-          `${API_URL}/schoolapi/utils/confirma_renap`,
+          `${API_URL}/schoolapi/utils/insert_certificado`,
           {
             method: "POST",
             headers: JSON.parse(REACT_APP_API_HEADERS),
             body: JSON.stringify({
-              Opcion: 2,
               IdEmp: user.IdEmp,
               IpHost: "131.107.1.235",
               HostName: "DEV1",
               OS: "Windows",
-              Detalle: datosSeleccionados,
+              Data: { Detalle: certificado },
+              UrlCertificado: url,
               Carnet: carnet,
             }),
           }
@@ -257,7 +78,7 @@ export default function QRResultScreen({ route, navigation }) {
           setLoading(false);
           setShowAviso(true);
         } else {
-          console.log("Respuesta update revisión 2:", data);
+          console.log("Respuesta insert certificado:", data);
           setLoading(false);
           setTimeout(() => {
             setShowExito(true);
@@ -272,6 +93,254 @@ export default function QRResultScreen({ route, navigation }) {
       }
     }, 300); // 300ms para asegurar que el modal se vea
   };
+
+  // Renderizado de datos generales del certificado
+  const renderCertGeneral = () => (
+    <View
+      style={{
+        marginBottom: 16,
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        padding: 12,
+      }}
+    >
+      <Text
+        style={{
+          fontWeight: "bold",
+          fontSize: 20,
+          color: "#EA963E",
+          textAlign: "center",
+          marginBottom: 8,
+        }}
+      >
+        Certificado escolar
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Centro educativo: </Text>
+        {certificado.centro_educativo}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Código centro: </Text>
+        {certificado.codigo_centro_educativo}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Municipio: </Text>
+        {certificado.municipio}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Departamento: </Text>
+        {certificado.departamento}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Jornada: </Text>
+        {certificado.jornada}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Plan: </Text>
+        {certificado.plan}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text
+          style={[
+            styles.label,
+            {
+              color:
+                certificado.validaciones &&
+                certificado.validaciones[0] &&
+                certificado.validaciones[0].Mensaje &&
+                certificado.validaciones[0].Mensaje.trim() !== ""
+                  ? "#b30000"
+                  : undefined,
+            },
+          ]}
+        >
+          Estudiante:{" "}
+        </Text>
+        <Text
+          style={{
+            color:
+              certificado.validaciones &&
+              certificado.validaciones[0] &&
+              certificado.validaciones[0].Mensaje &&
+              certificado.validaciones[0].Mensaje.trim() !== ""
+                ? "#b30000"
+                : undefined,
+          }}
+        >
+          {certificado.estudiante}
+        </Text>
+      </Text>
+      <Text style={styles.dataText}>
+        <Text
+          style={[
+            styles.label,
+            {
+              color:
+                certificado.validaciones &&
+                certificado.validaciones[1] &&
+                certificado.validaciones[1].Mensaje &&
+                certificado.validaciones[1].Mensaje.trim() !== ""
+                  ? "#b30000"
+                  : undefined,
+            },
+          ]}
+        >
+          Código personal:{" "}
+        </Text>
+        <Text
+          style={{
+            color:
+              certificado.validaciones &&
+              certificado.validaciones[1] &&
+              certificado.validaciones[1].Mensaje &&
+              certificado.validaciones[1].Mensaje.trim() !== ""
+                ? "#b30000"
+                : undefined,
+          }}
+        >
+          {certificado.codigo_personal}
+        </Text>
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Ciclo escolar: </Text>
+        {certificado.ciclo_escolar}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Grado: </Text>
+        {certificado.grado}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Resultado: </Text>
+        {certificado.resultado}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Fecha emisión: </Text>
+        {certificado.fecha_emision}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Responsable: </Text>
+        {certificado.nombre_responsable}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Director(a): </Text>
+        {certificado.nombre_director}
+      </Text>
+    </View>
+  );
+
+  // Renderizado de validaciones
+  const renderValidaciones = () => {
+    if (
+      !certificado.validaciones ||
+      !Array.isArray(certificado.validaciones) ||
+      certificado.validaciones.length === 0
+    ) {
+      return null;
+    }
+    return (
+      <View
+        style={{
+          backgroundColor: "#ffeaea",
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 16,
+          borderWidth: 1,
+          borderColor: "#ffb3b3",
+        }}
+      >
+        <Text
+          style={{
+            fontWeight: "bold",
+            fontSize: 18,
+            color: "#b30000",
+            marginBottom: 8,
+            textAlign: "center",
+          }}
+        >
+          Observaciones certificado
+        </Text>
+        {certificado.validaciones.map((v, idx) => (
+          <View
+            key={idx}
+            style={{
+              marginBottom: 6,
+              flexDirection: "row",
+              alignItems: "flex-start",
+            }}
+          >
+            <MaterialCommunityIcons
+              name="alert-circle"
+              size={20}
+              color="#b30000"
+              style={{ marginRight: 6, marginTop: 2 }}
+            />
+            <Text
+              style={{ color: "#b30000", fontSize: 16, flex: 1 }}
+            >{`${v.Mensaje}`}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
+  // Renderizado de materias
+  const renderMaterias = () => (
+    <View
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 16,
+      }}
+    >
+      <Text
+        style={{
+          fontWeight: "bold",
+          fontSize: 18,
+          color: "#4782DA",
+          textAlign: "center",
+          marginBottom: 8,
+        }}
+      >
+        Materias certificado
+      </Text>
+      {certificado.materias.map((m) => (
+        <View
+          key={m.no}
+          style={{
+            borderBottomWidth: 1,
+            borderBottomColor: "#eee",
+            paddingVertical: 6,
+          }}
+        >
+          <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
+            {m.no}. {m.nombre}
+          </Text>
+          {m.submateria !== "" && (
+            <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
+              {m.submateria}
+            </Text>
+          )}
+          <Text style={{ color: "#333" }}>
+            Nota numérica:{" "}
+            <Text style={{ fontWeight: "bold" }}>{m.nota_numerica}</Text>
+          </Text>
+          <Text style={{ color: "#333" }}>
+            Nota en letras:{" "}
+            <Text style={{ fontWeight: "bold" }}>{m.nota_letras}</Text>
+          </Text>
+          <Text
+            style={{
+              color: m.resultado === "APROBADA" ? "green" : "red",
+              fontWeight: "bold",
+            }}
+          >
+            Resultado: {m.resultado}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
     <>
@@ -304,11 +373,59 @@ export default function QRResultScreen({ route, navigation }) {
             >
               Aviso
             </Text>
-            <Text
-              style={{ color: "#1B2635", fontSize: 16, textAlign: "center" }}
-            >
-              {mensajeAviso}
-            </Text>
+            {/* Mensajes de validación en el modal de aviso */}
+            {puedeContinuar ? (
+              <View
+                style={{
+                  backgroundColor: "#ffeaea",
+                  borderRadius: 8,
+                  padding: 12,
+                  marginBottom: 0,
+                  borderWidth: 1,
+                  borderColor: "#ffb3b3",
+                  width: 240,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 18,
+                    color: "#b30000",
+                    marginBottom: 8,
+                    textAlign: "center",
+                  }}
+                >
+                  Observaciones certificado
+                </Text>
+                {mensajeAviso.split("\n").map((msg, idx) => (
+                  <View
+                    key={idx}
+                    style={{
+                      marginBottom: 6,
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="alert-circle"
+                      size={20}
+                      color="#b30000"
+                      style={{ marginRight: 6, marginTop: 2 }}
+                    />
+                    <Text style={{ color: "#b30000", fontSize: 16, flex: 1 }}>
+                      {msg}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <Text
+                style={{ color: "#1B2635", fontSize: 16, textAlign: "center" }}
+              >
+                {mensajeAviso}
+              </Text>
+            )}
             <TouchableHighlight
               style={{
                 marginTop: 20,
@@ -318,12 +435,18 @@ export default function QRResultScreen({ route, navigation }) {
                 paddingHorizontal: 24,
               }}
               underlayColor="#3366b3"
-              onPress={() => setShowAviso(false)}
+              onPress={() => {
+                setShowAviso(false);
+                if (puedeContinuar) {
+                  setPuedeContinuar(false);
+                  setShowConfirm(true);
+                }
+              }}
             >
               <Text
                 style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
               >
-                Cerrar
+                Aceptar
               </Text>
             </TouchableHighlight>
           </View>
@@ -448,7 +571,8 @@ export default function QRResultScreen({ route, navigation }) {
             <Text
               style={{ color: "#1B2635", fontSize: 16, textAlign: "center" }}
             >
-              ¿Estás seguro de guardar los datos seleccionados?
+              ¿Estás seguro de guardar los datos de la certificación de
+              estudios?
             </Text>
             <View style={{ flexDirection: "row", marginTop: 20 }}>
               <TouchableHighlight
@@ -489,53 +613,12 @@ export default function QRResultScreen({ route, navigation }) {
         </View>
       </Modal>
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={styles.titulo}>{"Datos CIP QR\nvs Revisión #2"}</Text>
-          <View style={styles.checkboxesHeader}>
-            <TouchableHighlight
-              onPress={() => handleSeleccionGlobal("CIP")}
-              underlayColor="#eee"
-              style={{ marginRight: 8, borderRadius: 12 }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <MaterialCommunityIcons
-                  name={
-                    seleccionGlobal === "CIP"
-                      ? "checkbox-marked"
-                      : "checkbox-blank-outline"
-                  }
-                  size={22}
-                  color="#4782DA"
-                />
-                <Text style={{ marginLeft: 4, color: "white" }}>Todos CIP</Text>
-              </View>
-            </TouchableHighlight>
-            <TouchableHighlight
-              onPress={() => handleSeleccionGlobal("REVISION#2")}
-              underlayColor="#eee"
-              style={{ borderRadius: 12 }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <MaterialCommunityIcons
-                  name={
-                    seleccionGlobal === "REVISION#2"
-                      ? "checkbox-marked"
-                      : "checkbox-blank-outline"
-                  }
-                  size={22}
-                  color="#EA963E"
-                />
-                <Text style={{ marginLeft: 4, color: "white" }}>
-                  Todos REVISION#2
-                </Text>
-              </View>
-            </TouchableHighlight>
-          </View>
-        </View>
-        {/* Datos Personales */}
-        {campos.map((c) =>
-          renderCampo(c.label, c.DatoRenap, c.DatoDB, c.Validacion, c.check)
-        )}
+        {/* Certificado Escolar */}
+        {renderCertGeneral()}
+        {/* Validaciones */}
+        {renderValidaciones()}
+        {/* Materias */}
+        {renderMaterias()}
 
         {/* Botones */}
         <View style={styles.containerButton}>
@@ -658,9 +741,9 @@ const styles = StyleSheet.create({
     gap: 5,
     margin: 10,
   },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 18,
+  dataText: {
+    color: "#1B2635",
+    fontSize: 16,
+    marginBottom: 4,
   },
 });

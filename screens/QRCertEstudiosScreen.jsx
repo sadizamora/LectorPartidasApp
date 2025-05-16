@@ -11,7 +11,7 @@ import { CameraView, Camera } from "expo-camera";
 import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
-export default function QRScannerScreen({ route, navigation }) {
+export default function QRCertEstudiosScreen({ route, navigation }) {
   const { dataAlumno, carnet, user } = route.params;
   const [scanned, setScanned] = useState(false);
   const [data, setData] = useState(null);
@@ -33,7 +33,7 @@ export default function QRScannerScreen({ route, navigation }) {
         // 🔹 Realizar la petición a la API
         await fetch(
           `${API_URL}` +
-            "/schoolapi/utils/lecturaqr_url?UrlQR=" +
+            "/schoolapi/utils/lectura_certificado?UrlCertificado=" +
             data +
             "&Carnet=" +
             carnet +
@@ -47,11 +47,12 @@ export default function QRScannerScreen({ route, navigation }) {
           .then((response) => response.json())
           .then((response) => {
             setLoading(false);
-            navigation.navigate("QRResult", {
+            navigation.navigate("QRResultEstudios", {
               dataAlumno,
               carnet,
               scannedData: response.msg,
               user,
+              url: data,
             });
           })
           .catch((err) => {

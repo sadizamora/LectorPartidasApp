@@ -1,12 +1,11 @@
 // HomeScreen.js
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   SafeAreaView,
   Text,
   TouchableWithoutFeedback,
   TouchableHighlight,
-  Image,
   StyleSheet,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -68,21 +67,75 @@ export default function HomeScreen({ navigation, route }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.containerHome}>
         {/* Encabezado con CARNET y botón de edición */}
-        <View style={styles.headerRow}>
-          <Text style={styles.subtitleText}>CARNET {carnet}</Text>
-          <TouchableWithoutFeedback
-            onPress={() => navigation.navigate("Carnet", { user })}
+        <View
+          style={{
+            marginBottom: 30,
+            width: "100%",
+            alignItems: "center",
+            borderBottomColor: "#EA963E",
+            borderBottomWidth: 1,
+          }}
+        >
+          <Text style={[styles.subtitleText, { textAlign: "center" }]}>
+            Carnet
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+            }}
           >
-            <MaterialCommunityIcons name="pencil" size={28} color="#EA963E" />
-          </TouchableWithoutFeedback>
+            <Text
+              style={[
+                styles.subtitleText,
+                {
+                  textAlign: "center",
+                  color: "#EA963E",
+                  fontSize: 22,
+                },
+              ]}
+            >
+              {carnet}
+            </Text>
+            <TouchableWithoutFeedback
+              onPress={() => navigation.navigate("Carnet", { user })}
+            >
+              <MaterialCommunityIcons
+                name="pencil"
+                size={28}
+                color="#EA963E"
+                style={{ marginLeft: 24, alignSelf: "center" }}
+              />
+            </TouchableWithoutFeedback>
+          </View>
         </View>
-
-        {/* Logo o imagen */}
-        <Image
-          source={require("../assets/icon.png")}
-          style={styles.logoImage}
-        />
-
+        <View
+          style={{
+            marginBottom: 30,
+            width: "100%",
+            alignItems: "center",
+            borderBottomColor: "#EA963E",
+            borderBottomWidth: 1,
+          }}
+        >
+          <Text style={[styles.subtitleText, { textAlign: "center" }]}>
+            Alumno
+          </Text>
+          <Text
+            style={[
+              styles.subtitleText,
+              {
+                color: "#EA963E",
+                fontSize: 22,
+                textAlign: "center",
+              },
+            ]}
+          >
+            {dataAlumno?.Alumno}
+          </Text>
+        </View>
         {/* Botón RENAP */}
         <TouchableHighlight
           style={styles.button}
@@ -100,7 +153,6 @@ export default function HomeScreen({ navigation, route }) {
             <Text style={styles.buttonText}>Certificado RENAP</Text>
           </View>
         </TouchableHighlight>
-
         {/* Botón Escanear CIP */}
         <TouchableHighlight
           style={styles.button}
@@ -116,6 +168,25 @@ export default function HomeScreen({ navigation, route }) {
               color="#fff"
             />
             <Text style={styles.buttonText}>Escanear CIP - QR</Text>
+          </View>
+        </TouchableHighlight>
+        {/* Botón Escanear certificados estudios */}
+        <TouchableHighlight
+          style={styles.button}
+          underlayColor="#3366b3"
+          onPress={() =>
+            navigation.navigate("QRCertEstudios", { dataAlumno, carnet, user })
+          }
+        >
+          <View style={styles.buttonContent}>
+            <MaterialCommunityIcons
+              name="numeric-3-circle"
+              size={28}
+              color="#fff"
+            />
+            <Text style={styles.buttonText}>
+              Escanear certificados de estudios
+            </Text>
           </View>
         </TouchableHighlight>
       </View>
@@ -147,15 +218,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   subtitleText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#FFFFFF",
-  },
-  logoImage: {
-    width: 250,
-    height: 250,
-    resizeMode: "contain",
-    marginBottom: 20,
   },
   button: {
     backgroundColor: "#4782DA",
@@ -172,7 +237,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#FFFFFF",
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "600",
     marginLeft: 10,
   },

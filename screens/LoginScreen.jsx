@@ -11,7 +11,7 @@ import {
   Modal,
   TouchableHighlight,
 } from "react-native";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
