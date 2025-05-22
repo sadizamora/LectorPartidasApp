@@ -6,8 +6,10 @@ import {
   ActivityIndicator,
   Modal,
   Text,
+  TouchableHighlight,
 } from "react-native";
 import { CameraView, Camera } from "expo-camera";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
@@ -16,6 +18,11 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
   const [scanned, setScanned] = useState(false);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showRecuperacion, setShowRecuperacion] = useState(false);
+  // Nuevos estados para manejar ambos certificados
+  const [certificadoOriginal, setCertificadoOriginal] = useState(null);
+  const [urlOriginal, setUrlOriginal] = useState(null);
+  const [esSegundaLectura, setEsSegundaLectura] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -31,34 +38,59 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
     if (data && type === "qr") {
       try {
         // 🔹 Realizar la petición a la API
-        await fetch(
+        const response = await fetch(
           `${API_URL}` +
-            "/schoolapi/utils/lectura_certificado?UrlCertificado=" +
-            data +
-            "&Carnet=" +
-            carnet +
-            "&IdEmp=" +
-            user.IdEmp +
-            "&IpHost=131.107.1.235&HostName=DEV&OS=Windows",
+          "/schoolapi/utils/lectura_certificado?UrlCertificado=" +
+          data +
+          "&Carnet=" +
+          carnet +
+          "&IdEmp=" +
+          user.IdEmp +
+          "&IpHost=131.107.1.235&HostName=DEV&OS=Windows",
           {
             headers: JSON.parse(REACT_APP_API_HEADERS),
           }
-        )
-          .then((response) => response.json())
-          .then((response) => {
+        );
+        const responseData = await response.json();
+        console.log('responseData', responseData);
+        // Si es la primera lectura
+        if (!esSegundaLectura) {
+          // Verificar si hay materias con nota menor a 60
+          const tieneMateriaReprobada = responseData.msg.materias?.some(
+            (materia) => parseFloat(materia.nota_numerica) < 60
+          );
+
+          if (tieneMateriaReprobada) {
+            // Guardar el certificado original
+            setCertificadoOriginal(responseData.msg);
+            setUrlOriginal(data);
             setLoading(false);
-            navigation.navigate("QRResultEstudios", {
-              dataAlumno,
-              carnet,
-              scannedData: response.msg,
-              user,
-              url: data,
-            });
-          })
-          .catch((err) => {
-            setLoading(false);
-            console.error(err);
+            setShowRecuperacion(true);
+            return;
+          }
+
+          // Si no hay materias reprobadas, navegar directamente
+          setLoading(false);
+          navigation.navigate("QRResultEstudios", {
+            dataAlumno,
+            carnet,
+            scannedData: responseData.msg,
+            user,
+            url: data,
           });
+        } else {
+          // Es la segunda lectura (certificado de recuperación)
+          setLoading(false);
+          navigation.navigate("QRResultEstudios", {
+            dataAlumno,
+            carnet,
+            scannedData: certificadoOriginal,
+            scannedDataRecuperacion: responseData.msg,
+            user,
+            url: urlOriginal,
+            urlRecuperacion: data,
+          });
+        }
       } catch (error) {
         setLoading(false);
         console.error("Error en la petición:", error);
@@ -66,6 +98,23 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
     } else {
       setLoading(false);
     }
+  };
+
+  const handleReiniciarEscaneo = () => {
+    setScanned(false);
+    setShowRecuperacion(false);
+    setEsSegundaLectura(true);
+  };
+
+  const handleContinuar = () => {
+    setShowRecuperacion(false);
+    navigation.navigate("QRResultEstudios", {
+      dataAlumno,
+      carnet,
+      scannedData: certificadoOriginal,
+      user,
+      url: urlOriginal,
+    });
   };
 
   return (
@@ -79,6 +128,88 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
           style={{ height: 400, width: 400 }}
         />
       </View>
+
+      {/* Modal de Recuperación */}
+      <Modal visible={showRecuperacion} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 300,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={48}
+              color="#EA963E"
+              style={{ marginBottom: 10 }}
+            />
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 10,
+                textAlign: "center",
+              }}
+            >
+              Aviso
+            </Text>
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 16,
+                textAlign: "center",
+                marginBottom: 20,
+              }}
+            >
+              El alumno tiene una nota no promovida. ¿Deseas leer el certificado de recuperación?
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#4782DA",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                }}
+                underlayColor="#3366b3"
+                onPress={handleReiniciarEscaneo}
+              >
+                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                  Sí
+                </Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#aaa",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                }}
+                underlayColor="#888"
+                onPress={handleContinuar}
+              >
+                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                  No
+                </Text>
+              </TouchableHighlight>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Loading */}
       <Modal visible={loading} transparent animationType="fade">
         <View
           style={{

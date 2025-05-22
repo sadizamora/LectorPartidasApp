@@ -14,9 +14,10 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function QRResultCertScreen({ route, navigation }) {
-  const { scannedData, carnet, dataAlumno, user, url } = route.params;
+  const { scannedData, scannedDataRecuperacion, carnet, dataAlumno, user, url, urlRecuperacion } = route.params;
 
   const certificado = scannedData;
+  const certificadoRecuperacion = scannedDataRecuperacion;
 
   // Estado para mostrar el modal de aviso
   const [showAviso, setShowAviso] = useState(false);
@@ -56,6 +57,7 @@ export default function QRResultCertScreen({ route, navigation }) {
     setLoading(true);
     setTimeout(async () => {
       try {
+        // Guardar certificado original
         const response = await fetch(
           `${API_URL}/schoolapi/utils/insert_certificado`,
           {
@@ -67,18 +69,48 @@ export default function QRResultCertScreen({ route, navigation }) {
               HostName: "DEV1",
               OS: "Windows",
               Data: { Detalle: certificado },
+              Recuperacion: false,
               UrlCertificado: url,
               Carnet: carnet,
             }),
           }
         );
         const data = await response.json();
+
+        // Si hay certificado de recuperación, guardarlo también
+        if (certificadoRecuperacion) {
+          const responseRecuperacion = await fetch(
+            `${API_URL}/schoolapi/utils/insert_certificado`,
+            {
+              method: "POST",
+              headers: JSON.parse(REACT_APP_API_HEADERS),
+              body: JSON.stringify({
+                IdEmp: user.IdEmp,
+                IpHost: "131.107.1.235",
+                HostName: "DEV1",
+                OS: "Windows",
+                Data: { Detalle: certificadoRecuperacion },
+                UrlCertificado: urlRecuperacion,
+                Recuperacion: true,
+                Carnet: carnet,
+              }),
+            }
+          );
+          const dataRecuperacion = await responseRecuperacion.json();
+
+          if (dataRecuperacion.msg.Error !== "0") {
+            setMensajeAviso("Error al guardar el certificado de recuperación.");
+            setLoading(false);
+            setShowAviso(true);
+            return;
+          }
+        }
+
         if (data.msg.Error !== "0") {
           setMensajeAviso("Error al guardar los datos.");
           setLoading(false);
           setShowAviso(true);
         } else {
-          console.log("Respuesta insert certificado:", data);
           setLoading(false);
           setTimeout(() => {
             setShowExito(true);
@@ -91,11 +123,11 @@ export default function QRResultCertScreen({ route, navigation }) {
         );
         setShowAviso(true);
       }
-    }, 300); // 300ms para asegurar que el modal se vea
+    }, 300);
   };
 
   // Renderizado de datos generales del certificado
-  const renderCertGeneral = () => (
+  const renderCertGeneral = (cert, titulo = "Certificado escolar") => (
     <View
       style={{
         marginBottom: 16,
@@ -113,31 +145,31 @@ export default function QRResultCertScreen({ route, navigation }) {
           marginBottom: 8,
         }}
       >
-        Certificado escolar
+        {titulo}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Centro educativo: </Text>
-        {certificado.centro_educativo}
+        {cert.centro_educativo}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Código centro: </Text>
-        {certificado.codigo_centro_educativo}
+        {cert.codigo_centro_educativo}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Municipio: </Text>
-        {certificado.municipio}
+        {cert.municipio}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Departamento: </Text>
-        {certificado.departamento}
+        {cert.departamento}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Jornada: </Text>
-        {certificado.jornada}
+        {cert.jornada}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Plan: </Text>
-        {certificado.plan}
+        {cert.plan}
       </Text>
       <Text style={styles.dataText}>
         <Text
@@ -145,10 +177,10 @@ export default function QRResultCertScreen({ route, navigation }) {
             styles.label,
             {
               color:
-                certificado.validaciones &&
-                certificado.validaciones[0] &&
-                certificado.validaciones[0].Mensaje &&
-                certificado.validaciones[0].Mensaje.trim() !== ""
+                cert.validaciones &&
+                  cert.validaciones[0] &&
+                  cert.validaciones[0].Mensaje &&
+                  cert.validaciones[0].Mensaje.trim() !== ""
                   ? "#b30000"
                   : undefined,
             },
@@ -159,15 +191,15 @@ export default function QRResultCertScreen({ route, navigation }) {
         <Text
           style={{
             color:
-              certificado.validaciones &&
-              certificado.validaciones[0] &&
-              certificado.validaciones[0].Mensaje &&
-              certificado.validaciones[0].Mensaje.trim() !== ""
+              cert.validaciones &&
+                cert.validaciones[0] &&
+                cert.validaciones[0].Mensaje &&
+                cert.validaciones[0].Mensaje.trim() !== ""
                 ? "#b30000"
                 : undefined,
           }}
         >
-          {certificado.estudiante}
+          {cert.estudiante}
         </Text>
       </Text>
       <Text style={styles.dataText}>
@@ -176,10 +208,10 @@ export default function QRResultCertScreen({ route, navigation }) {
             styles.label,
             {
               color:
-                certificado.validaciones &&
-                certificado.validaciones[1] &&
-                certificado.validaciones[1].Mensaje &&
-                certificado.validaciones[1].Mensaje.trim() !== ""
+                cert.validaciones &&
+                  cert.validaciones[1] &&
+                  cert.validaciones[1].Mensaje &&
+                  cert.validaciones[1].Mensaje.trim() !== ""
                   ? "#b30000"
                   : undefined,
             },
@@ -190,50 +222,58 @@ export default function QRResultCertScreen({ route, navigation }) {
         <Text
           style={{
             color:
-              certificado.validaciones &&
-              certificado.validaciones[1] &&
-              certificado.validaciones[1].Mensaje &&
-              certificado.validaciones[1].Mensaje.trim() !== ""
+              cert.validaciones &&
+                cert.validaciones[1] &&
+                cert.validaciones[1].Mensaje &&
+                cert.validaciones[1].Mensaje.trim() !== ""
                 ? "#b30000"
                 : undefined,
           }}
         >
-          {certificado.codigo_personal}
+          {cert.codigo_personal}
         </Text>
       </Text>
       <Text style={styles.dataText}>
-        <Text style={styles.label}>Ciclo escolar: </Text>
-        {certificado.ciclo_escolar}
+        <Text style={styles.label}>Matrícula: </Text>
+        {cert.matricula}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Fecha matrícula: </Text>
+        {cert.fecha_matricula}
+      </Text>
+      <Text style={styles.dataText}>
+        <Text style={styles.label}>Lugar matrícula: </Text>
+        {cert.lugar_matricula}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Grado: </Text>
-        {certificado.grado}
+        {cert.grado}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Resultado: </Text>
-        {certificado.resultado}
+        {cert.resultado}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Fecha emisión: </Text>
-        {certificado.fecha_emision}
+        {cert.fecha_emision}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Responsable: </Text>
-        {certificado.nombre_responsable}
+        {cert.nombre_responsable}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Director(a): </Text>
-        {certificado.nombre_director}
+        {cert.nombre_director}
       </Text>
     </View>
   );
 
   // Renderizado de validaciones
-  const renderValidaciones = () => {
+  const renderValidaciones = (cert) => {
     if (
-      !certificado.validaciones ||
-      !Array.isArray(certificado.validaciones) ||
-      certificado.validaciones.length === 0
+      !cert.validaciones ||
+      !Array.isArray(cert.validaciones) ||
+      cert.validaciones.length === 0
     ) {
       return null;
     }
@@ -259,7 +299,7 @@ export default function QRResultCertScreen({ route, navigation }) {
         >
           Observaciones certificado
         </Text>
-        {certificado.validaciones.map((v, idx) => (
+        {cert.validaciones.map((v, idx) => (
           <View
             key={idx}
             style={{
@@ -284,7 +324,7 @@ export default function QRResultCertScreen({ route, navigation }) {
   };
 
   // Renderizado de materias
-  const renderMaterias = () => (
+  const renderMaterias = (cert, titulo = "Materias certificado") => (
     <View
       style={{
         backgroundColor: "#fff",
@@ -302,9 +342,9 @@ export default function QRResultCertScreen({ route, navigation }) {
           marginBottom: 8,
         }}
       >
-        Materias certificado
+        {titulo}
       </Text>
-      {certificado.materias.map((m) => (
+      {cert.materias.map((m) => (
         <View
           key={m.no}
           style={{
@@ -316,7 +356,7 @@ export default function QRResultCertScreen({ route, navigation }) {
           <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
             {m.no}. {m.nombre}
           </Text>
-          {m.submateria !== "" && (
+          {m.submateria !== "" && m.submateria !== null && (
             <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
               {m.submateria}
             </Text>
@@ -331,12 +371,17 @@ export default function QRResultCertScreen({ route, navigation }) {
           </Text>
           <Text
             style={{
-              color: m.resultado === "APROBADA" ? "green" : "red",
+              color: m.nota_numerica >= 60 ? "green" : "red",
               fontWeight: "bold",
             }}
           >
             Resultado: {m.resultado}
           </Text>
+          {m.fecha !== "" && m.fecha !== null && (
+            <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
+            Fecha: {m.fecha}
+            </Text>
+          )}
         </View>
       ))}
     </View>
@@ -363,6 +408,12 @@ export default function QRResultCertScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="information"
+              size={48}
+              color="#4782DA"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",
@@ -452,6 +503,7 @@ export default function QRResultCertScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
       {/* Modal de loading */}
       <Modal visible={loading} transparent animationType="fade">
         <View
@@ -478,6 +530,7 @@ export default function QRResultCertScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
       {/* Modal de éxito */}
       <Modal visible={showExito} transparent animationType="fade">
         <View
@@ -497,6 +550,12 @@ export default function QRResultCertScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={48}
+              color="#4CAF50"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",
@@ -539,6 +598,7 @@ export default function QRResultCertScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
       {/* Modal de confirmación antes de guardar */}
       <Modal visible={showConfirm} transparent animationType="fade">
         <View
@@ -558,6 +618,12 @@ export default function QRResultCertScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="help-circle"
+              size={48}
+              color="#EA963E"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",
@@ -612,13 +678,23 @@ export default function QRResultCertScreen({ route, navigation }) {
           </View>
         </View>
       </Modal>
+
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Certificado Escolar */}
-        {renderCertGeneral()}
-        {/* Validaciones */}
-        {renderValidaciones()}
-        {/* Materias */}
-        {renderMaterias()}
+        {/* Certificado Original */}
+        {renderCertGeneral(certificado)}
+        {/* Validaciones del certificado original */}
+        {renderValidaciones(certificado)}
+        {/* Materias del certificado original */}
+        {renderMaterias(certificado)}
+
+        {/* Certificado de Recuperación si existe */}
+        {certificadoRecuperacion && (
+          <>
+            {renderCertGeneral(certificadoRecuperacion, "Certificado de recuperación")}
+            {renderValidaciones(certificadoRecuperacion)}
+            {renderMaterias(certificadoRecuperacion, "Materias de recuperación")}
+          </>
+        )}
 
         {/* Botones */}
         <View style={styles.containerButton}>
@@ -636,7 +712,7 @@ export default function QRResultCertScreen({ route, navigation }) {
           <TouchableHighlight
             style={styles.button}
             onPress={() =>
-              navigation.navigate("QRScanner", { scannedData, carnet, user })
+              navigation.navigate("QRCertEstudios", { dataAlumno, carnet, user })
             }
           >
             <View style={styles.buttonContent}>

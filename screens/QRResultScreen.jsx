@@ -294,6 +294,12 @@ export default function QRResultScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="information"
+              size={48}
+              color="#4782DA"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",
@@ -374,6 +380,12 @@ export default function QRResultScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="check-circle"
+              size={48}
+              color="#4CAF50"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",
@@ -435,6 +447,12 @@ export default function QRResultScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="help-circle"
+              size={48}
+              color="#EA963E"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",

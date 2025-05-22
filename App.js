@@ -10,6 +10,7 @@ import Login from "./screens/LoginScreen";
 import Carnet from "./screens/CarnetScreen";
 import QRCertEstudiosScreen from "./screens/QRCertEstudiosScreen";
 import QRResultCertScreen from "./screens/QRResultCertScreen";
+import CamaraCertScreen from "./screens/CamaraCertScreen";
 import { StatusBar } from "expo-status-bar";
 
 const Stack = createNativeStackNavigator();
@@ -67,6 +68,11 @@ export default function App() {
           name="QRResultEstudios"
           options={{ title: "Resultado lectura certificados" }}
           component={QRResultCertScreen}
+        />
+        <Stack.Screen
+          name="CamaraCert"
+          options={{ title: "Lectura certificados de estudios" }}
+          component={CamaraCertScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

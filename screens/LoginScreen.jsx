@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 const logoApp = require("../assets/icon.png");
@@ -207,6 +208,12 @@ export default function App({ navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="information"
+              size={48}
+              color="#4782DA"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",

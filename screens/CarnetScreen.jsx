@@ -221,6 +221,12 @@ export default function CarnetScreeen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="information"
+              size={48}
+              color="#4782DA"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",

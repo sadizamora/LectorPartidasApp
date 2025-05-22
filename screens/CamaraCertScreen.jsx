@@ -18,8 +18,8 @@ import * as FileSystem from "expo-file-system";
 import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
-export default function CaptureScreen({ route, navigation }) {
-  const { datos, dataAlumno, carnet, user } = route.params;
+export default function CamaraCertScreen({ route, navigation }) {
+  const { dataAlumno, carnet, user } = route.params;
   const cameraRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -29,13 +29,21 @@ export default function CaptureScreen({ route, navigation }) {
   const [showAviso, setShowAviso] = useState(false);
   const [mensajeAviso, setMensajeAviso] = useState("");
   const [showCamera, setShowCamera] = useState(true);
+  const [showRecuperacion, setShowRecuperacion] = useState(false);
+  const [certificadoOriginal, setCertificadoOriginal] = useState(null);
+  const [esSegundaFoto, setEsSegundaFoto] = useState(false);
 
   const takePhoto = async () => {
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true });
+      const photo = await cameraRef.current.takePictureAsync({
+        base64: true,
+        quality: 0.7,
+        width: 1700,
+        height: 2200
+      });
       const newPhotos = [...photos, photo.uri];
       setPhotos(newPhotos);
-      if (newPhotos.length === 2) setShowPreview(true);
+      if (newPhotos.length === 1) setShowPreview(true);
     }
   };
 
@@ -45,8 +53,30 @@ export default function CaptureScreen({ route, navigation }) {
     setShowPreview(false);
   };
 
+  const handleReiniciarCaptura = () => {
+    setShowRecuperacion(false);
+    setEsSegundaFoto(true);
+    resetCapture();
+    setShowCamera(true);
+  };
+
+  const handleContinuar = () => {
+    setShowRecuperacion(false);
+    setLoading(false);
+    setShowPreview(false);
+    setShowCamera(false);
+    setTimeout(() => {
+      navigation.navigate("QRResultEstudios", {
+        dataAlumno,
+        carnet,
+        scannedData: certificadoOriginal,
+        user,
+        url: null,
+      });
+    }, 150);
+  };
+
   const handleConfirm = async () => {
-    console.log("Carnet:", carnet);
     setLoading(true);
     try {
       const encoded = await Promise.all(
@@ -58,45 +88,67 @@ export default function CaptureScreen({ route, navigation }) {
         })
       );
       setBase64Images(encoded);
-      // Envía las imágenes al servidor
-      const response = await fetch(`${API_URL}/schoolapi/utils/lectura_renap`, {
+
+      // Envía la imagen al servidor
+      const response = await fetch(`${API_URL}/schoolapi/utils/lectura_certificado_imagen`, {
         method: "POST",
         headers: JSON.parse(REACT_APP_API_HEADERS),
         body: JSON.stringify({
-          IdEmp: user.IdEmp,
-          IpHost: "131.107.1.235",
-          HostName: "DEV1",
-          OS: "Windows",
-          FotoRenap: encoded[0],
-          FotoRenap2: encoded[1],
+          FotoCertificado: encoded[0],
           Carnet: carnet,
         }),
       });
       const data = await response.json();
-      if (data.msg.Error == 2005) {
-        setMensajeAviso(data.msg.Mensaje);
-        setShowAviso(true);
+      console.log('data', data);
+
+      // Si es la primera foto
+      if (!esSegundaFoto) {
+        // Verificar si hay materias con nota menor a 60
+        const tieneMateriaReprobada = data.msg.materias?.some(
+          (materia) => parseFloat(materia.nota_numerica) < 60
+        );
+
+        if (tieneMateriaReprobada) {
+          setCertificadoOriginal(data.msg);
+          setLoading(false);
+          setShowRecuperacion(true);
+          return;
+        }
+
+        // Si no hay materias reprobadas, continuar con flujo normal
         setLoading(false);
-        return;
-      }
-      if (data.msg.Error == 0) {
-        setLoading(false); // Cierra el modal antes de navegar
-        setShowPreview(false); // Opcional: desmonta la vista previa
-        setShowCamera(false); // desmonta la cámara
+        setShowPreview(false);
+        setShowCamera(false);
         setTimeout(() => {
-          navigation.navigate("PhotoData", {
+          navigation.navigate("QRResultEstudios", {
             dataAlumno,
             carnet,
-            datos: data.msg,
+            scannedData: data.msg,
             user,
+            url: null,
           });
-        }, 150); // espera a que la cámara se desmonte
-        return;
+        }, 150);
+      } else {
+        // Es la segunda foto (certificado de recuperación)
+        setLoading(false);
+        setShowPreview(false);
+        setShowCamera(false);
+        setTimeout(() => {
+          navigation.navigate("QRResultEstudios", {
+            dataAlumno,
+            carnet,
+            scannedData: certificadoOriginal,
+            scannedDataRecuperacion: data.msg,
+            user,
+            url: null,
+          });
+        }, 150);
       }
-      setLoading(false);
     } catch (error) {
       setLoading(false);
-      console.error("Error al convertir/enviar:", error);
+      setMensajeAviso("Error al procesar la imagen. Intente nuevamente.");
+      setShowAviso(true);
+      console.error("Error al procesar:", error);
     }
   };
 
@@ -139,7 +191,7 @@ export default function CaptureScreen({ route, navigation }) {
           >
             <ActivityIndicator size="large" color="#EA963E" />
             <Text style={{ color: "#1B2635", marginTop: 10, fontSize: 18 }}>
-              Cargando...
+              Procesando certificado...
             </Text>
           </View>
         </View>
@@ -163,12 +215,6 @@ export default function CaptureScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
-            <MaterialCommunityIcons
-              name="information"
-              size={48}
-              color="#4782DA"
-              style={{ marginBottom: 10 }}
-            />
             <Text
               style={{
                 color: "#1B2635",
@@ -205,27 +251,99 @@ export default function CaptureScreen({ route, navigation }) {
         </View>
       </Modal>
 
+      <Modal visible={showRecuperacion} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 300,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="alert-circle-outline"
+              size={48}
+              color="#EA963E"
+              style={{ marginBottom: 10 }}
+            />
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 18,
+                fontWeight: "bold",
+                marginBottom: 10,
+                textAlign: "center",
+              }}
+            >
+              Aviso
+            </Text>
+            <Text
+              style={{
+                color: "#1B2635",
+                fontSize: 16,
+                textAlign: "center",
+                marginBottom: 20,
+              }}
+            >
+              El alumno tiene una nota no promovida. ¿Deseas capturar el certificado de recuperación?
+            </Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#4782DA",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                }}
+                underlayColor="#3366b3"
+                onPress={handleReiniciarCaptura}
+              >
+                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                  Sí
+                </Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={{
+                  backgroundColor: "#aaa",
+                  borderRadius: 8,
+                  paddingVertical: 8,
+                  paddingHorizontal: 24,
+                }}
+                underlayColor="#888"
+                onPress={handleContinuar}
+              >
+                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                  No
+                </Text>
+              </TouchableHighlight>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {showPreview ? (
         <View style={styles.previewContainer}>
-          <Text style={styles.title}>Fotos Capturadas</Text>
+          <Text style={styles.title}>
+            {esSegundaFoto ? "Certificado de Recuperación Capturado" : "Certificado Capturado"}
+          </Text>
 
-          <FlatList
-            data={photos}
-            horizontal
-            keyExtractor={(item, index) => item + index}
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            renderItem={({ item, index }) => (
-              <View style={styles.thumbnailWrapper}>
-                <TouchableOpacity onPress={() => setSelectedImage(item)}>
-                  <Image source={{ uri: item }} style={styles.thumbnailLarge} />
-                </TouchableOpacity>
-                <Text style={styles.thumbnailText}>
-                  {index === 0 ? "Frente" : "Atrás"}
-                </Text>
-              </View>
-            )}
-          />
+          <View style={styles.thumbnailWrapper}>
+            <TouchableOpacity onPress={() => setSelectedImage(photos[0])}>
+              <Image source={{ uri: photos[0] }} style={styles.thumbnailLarge} />
+            </TouchableOpacity>
+            <Text style={styles.thumbnailText}>
+              {esSegundaFoto ? "Certificado de Recuperación" : "Certificado"}
+            </Text>
+          </View>
 
           <View style={styles.previewButtons}>
             <TouchableHighlight
@@ -248,44 +366,25 @@ export default function CaptureScreen({ route, navigation }) {
       ) : (
         <>
           {showCamera && !showPreview && (
-            <CameraView style={styles.cameraView} ref={cameraRef} />
+            <>
+              <CameraView style={styles.cameraView} ref={cameraRef} />
+              <View style={styles.guideOverlay}>
+                <View style={styles.guideBox} />
+              </View>
+            </>
           )}
 
           <Text style={styles.helperText}>
             <MaterialCommunityIcons
-              name={
-                photos.length === 0 ? "numeric-1-circle" : "numeric-2-circle"
-              }
+              name="file-document-outline"
               size={24}
               color="#fff"
             />
-            {photos.length === 0 ? "Frente" : "Atras"}
+            {esSegundaFoto 
+              ? "Capture el certificado de recuperación completo"
+              : "Capture el certificado completo"
+            }
           </Text>
-
-          {photos.length > 0 && (
-            <View style={styles.bottomOverlay}>
-              <FlatList
-                data={photos}
-                horizontal
-                keyExtractor={(item, index) => item + index}
-                showsHorizontalScrollIndicator={false}
-                pagingEnabled
-                renderItem={({ item, index }) => (
-                  <View style={styles.thumbnailWrapper}>
-                    <TouchableOpacity onPress={() => setSelectedImage(item)}>
-                      <Image
-                        source={{ uri: item }}
-                        style={styles.thumbnailSmall}
-                      />
-                    </TouchableOpacity>
-                    <Text style={styles.thumbnailText}>
-                      {index === 0 ? "Frente" : "Atrás"}
-                    </Text>
-                  </View>
-                )}
-              />
-            </View>
-          )}
 
           <TouchableHighlight
             style={styles.floatingButton}
@@ -311,6 +410,19 @@ const styles = StyleSheet.create({
   cameraView: {
     flex: 1,
   },
+  guideOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  guideBox: {
+    width: '85%',
+    height: '90%',
+    borderWidth: 2,
+    borderColor: '#EA963E',
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+  },
   helperText: {
     position: "absolute",
     top: 40,
@@ -322,6 +434,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   floatingButton: {
     position: "absolute",
@@ -358,18 +472,18 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     paddingTop: 20,
+    marginBottom: 20,
   },
   thumbnailWrapper: {
     alignItems: "center",
     justifyContent: "center",
-    width: "250",
     paddingHorizontal: 5,
     marginHorizontal: 5,
   },
   thumbnailText: {
     color: "#fff",
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 16,
+    marginTop: 8,
     textAlign: "center",
   },
   previewButtons: {
@@ -377,41 +491,28 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     width: "100%",
     paddingBottom: 20,
+    marginTop: 20,
+    gap: 20,
   },
   repeatButton: {
-    backgroundColor: "#4782DA",
+    backgroundColor: "#EA963E",
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     borderRadius: 10,
   },
   confirmButton: {
     backgroundColor: "#4782DA",
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     borderRadius: 10,
   },
-  bottomOverlay: {
-    position: "absolute",
-    bottom: 100,
-    width: "100%",
-    paddingVertical: 10,
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
   thumbnailLarge: {
-    width: 250,
-    height: 450,
+    width: 300,
+    height: 400,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "orange",
     marginHorizontal: 10,
-  },
-  thumbnailSmall: {
-    width: 120,
-    height: 160,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "orange",
-    marginHorizontal: 6,
   },
   fullscreenContainer: {
     flex: 1,
@@ -437,4 +538,4 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "bold",
   },
-});
+}); 

@@ -189,6 +189,25 @@ export default function HomeScreen({ navigation, route }) {
             </Text>
           </View>
         </TouchableHighlight>
+        {/* Botón tomar foto certificados estudios */}
+        <TouchableHighlight
+          style={styles.button}
+          underlayColor="#3366b3"
+          onPress={() =>
+            navigation.navigate("CamaraCert", { dataAlumno, carnet, user })
+          }
+        >
+          <View style={styles.buttonContent}>
+            <MaterialCommunityIcons
+              name="numeric-4-circle"
+              size={28}
+              color="#fff"
+            />
+            <Text style={styles.buttonText}>
+              Foto certificados de estudios
+            </Text>
+          </View>
+        </TouchableHighlight>
       </View>
     </SafeAreaView>
   );
