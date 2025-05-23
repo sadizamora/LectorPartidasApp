@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   SafeAreaView,
@@ -7,9 +7,12 @@ import {
   Modal,
   Text,
   TouchableHighlight,
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import { CameraView, Camera } from "expo-camera";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import * as FileSystem from "expo-file-system";
 import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
@@ -19,49 +22,49 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showRecuperacion, setShowRecuperacion] = useState(false);
-  // Nuevos estados para manejar ambos certificados
   const [certificadoOriginal, setCertificadoOriginal] = useState(null);
   const [urlOriginal, setUrlOriginal] = useState(null);
   const [esSegundaLectura, setEsSegundaLectura] = useState(false);
+  
+  // Estados para manejo de la cámara y foto
+  const cameraRef = useRef(null);
+  const [showCamera, setShowCamera] = useState(true);
+  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [isQRMode, setIsQRMode] = useState(false); // Cambiado a false para empezar en modo foto
+  const [photo, setPhoto] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [fotoTomada, setFotoTomada] = useState(false);
+  const [responseImagenData, setResponseImagenData] = useState(null);
 
   useEffect(() => {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
+      setIsCameraReady(status === "granted");
     })();
   }, []);
 
   const handleBarCodeScanned = async ({ type, data }) => {
+    if (!isQRMode) return;
+    
     setScanned(true);
     setData(data);
     setLoading(true);
     if (data && type === "qr") {
       try {
-        // 🔹 Realizar la petición a la API
         const response = await fetch(
-          `${API_URL}` +
-          "/schoolapi/utils/lectura_certificado?UrlCertificado=" +
-          data +
-          "&Carnet=" +
-          carnet +
-          "&IdEmp=" +
-          user.IdEmp +
-          "&IpHost=131.107.1.235&HostName=DEV&OS=Windows",
+          `${API_URL}/schoolapi/utils/lectura_certificado?UrlCertificado=${data}&Carnet=${carnet}&IdEmp=${user.IdEmp}&IpHost=131.107.1.235&HostName=DEV&OS=Windows`,
           {
             headers: JSON.parse(REACT_APP_API_HEADERS),
           }
         );
         const responseData = await response.json();
         console.log('responseData', responseData);
-        // Si es la primera lectura
         if (!esSegundaLectura) {
-          // Verificar si hay materias con nota menor a 60
           const tieneMateriaReprobada = responseData.msg.materias?.some(
             (materia) => parseFloat(materia.nota_numerica) < 60
           );
 
           if (tieneMateriaReprobada) {
-            // Guardar el certificado original
             setCertificadoOriginal(responseData.msg);
             setUrlOriginal(data);
             setLoading(false);
@@ -69,23 +72,24 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
             return;
           }
 
-          // Si no hay materias reprobadas, navegar directamente
+          // Si no hay materias reprobadas, navegar a resultados
           setLoading(false);
           navigation.navigate("QRResultEstudios", {
             dataAlumno,
             carnet,
             scannedData: responseData.msg,
+            scannedDataImagen: responseImagenData,
             user,
             url: data,
           });
         } else {
-          // Es la segunda lectura (certificado de recuperación)
           setLoading(false);
           navigation.navigate("QRResultEstudios", {
             dataAlumno,
             carnet,
             scannedData: certificadoOriginal,
             scannedDataRecuperacion: responseData.msg,
+            scannedDataImagen: responseImagenData,
             user,
             url: urlOriginal,
             urlRecuperacion: data,
@@ -100,10 +104,50 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
     }
   };
 
+  const handleTakePhoto = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync({
+        base64: true,
+        quality: 0.7,
+        width: 1700,
+        height: 2200
+      });
+      setPhoto(photo);
+      setShowPreview(true);
+    }
+  };
+
+  const handleConfirmPhoto = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/schoolapi/utils/lectura_certificado_imagen_fecha`, {
+        method: "POST",
+        headers: JSON.parse(REACT_APP_API_HEADERS),
+        body: JSON.stringify({
+          FotoCertificado: photo.base64,
+          Carnet: carnet,
+        }),
+      });
+      const responseData = await response.json();
+      setResponseImagenData(responseData.msg);
+      setFotoTomada(true);
+      setShowPreview(false);
+      setLoading(false);
+      setIsQRMode(true); // Cambiar a modo QR después de procesar la foto
+    } catch (error) {
+      setLoading(false);
+      console.error("Error al procesar la imagen:", error);
+    }
+  };
+
   const handleReiniciarEscaneo = () => {
     setScanned(false);
     setShowRecuperacion(false);
     setEsSegundaLectura(true);
+    setIsQRMode(false); // Comenzar con modo foto
+    setPhoto(null);
+    setResponseImagenData(null);
+    setFotoTomada(false);
   };
 
   const handleContinuar = () => {
@@ -112,22 +156,83 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
       dataAlumno,
       carnet,
       scannedData: certificadoOriginal,
+      scannedDataImagen: responseImagenData,
       user,
       url: urlOriginal,
     });
+  };
+
+  const handleScanearOtro = () => {
+    setScanned(false);
+    setIsQRMode(false); // Comenzar con modo foto
+    setPhoto(null);
+    setResponseImagenData(null);
+    setFotoTomada(false);
+    setEsSegundaLectura(false);
+    navigation.navigate("QRCertEstudios", { dataAlumno, carnet, user });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.barcodebox}>
         <CameraView
-          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          ref={cameraRef}
+          onBarcodeScanned={scanned && isQRMode ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
-            barcodeTypes: ["qr"],
+            barcodeTypes: isQRMode ? ["qr"] : [],
           }}
           style={{ height: 400, width: 400 }}
         />
+        
+        {!isQRMode && (
+          <View style={styles.guideOverlay}>
+            <View style={styles.guideBox} />
+          </View>
+        )}
+
+        {isQRMode && (
+          <View style={[styles.guideOverlay, { backgroundColor: 'rgba(0,0,0,0.1)' }]}>
+            <View style={[styles.guideBox, { borderColor: '#4782DA' }]} />
+            <Text style={styles.guideText}>Escanea el código QR del certificado</Text>
+          </View>
+        )}
       </View>
+
+      {!isQRMode && !showPreview && (
+        <TouchableHighlight
+          style={styles.floatingButton}
+          underlayColor="#3366b3"
+          onPress={handleTakePhoto}
+        >
+          <View style={styles.buttonContent}>
+            <MaterialCommunityIcons name="camera" size={28} color="white" />
+            <Text style={styles.buttonText}>Capturar</Text>
+          </View>
+        </TouchableHighlight>
+      )}
+
+      {/* Modal de Preview de Foto */}
+      <Modal visible={showPreview} transparent animationType="fade">
+        <View style={styles.previewContainer}>
+          <Image source={{ uri: photo?.uri }} style={styles.previewImage} />
+          <View style={styles.previewButtons}>
+            <TouchableHighlight
+              style={[styles.button, { backgroundColor: "#EA963E" }]}
+              underlayColor="#c97c32"
+              onPress={() => setShowPreview(false)}
+            >
+              <Text style={styles.buttonText}>Repetir</Text>
+            </TouchableHighlight>
+            <TouchableHighlight
+              style={[styles.button, { backgroundColor: "#4782DA" }]}
+              underlayColor="#3366b3"
+              onPress={handleConfirmPhoto}
+            >
+              <Text style={styles.buttonText}>Confirmar</Text>
+            </TouchableHighlight>
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal de Recuperación */}
       <Modal visible={showRecuperacion} transparent animationType="fade">
@@ -149,7 +254,7 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
             }}
           >
             <MaterialCommunityIcons
-              name="alert-circle-outline"
+              name="file-cancel"
               size={48}
               color="#EA963E"
               style={{ marginBottom: 10 }}
@@ -230,7 +335,7 @@ export default function QRCertEstudiosScreen({ route, navigation }) {
           >
             <ActivityIndicator size="large" color="#EA963E" />
             <Text style={{ color: "#1B2635", marginTop: 10, fontSize: 18 }}>
-              Cargando...
+              {isQRMode ? "Procesando QR..." : "Procesando imagen..."}
             </Text>
           </View>
         </View>
@@ -332,5 +437,65 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 50,
     width: "90%",
+  },
+  guideOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  guideBox: {
+    width: '85%',
+    height: '90%',
+    borderWidth: 2,
+    borderColor: '#EA963E',
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+  },
+  guideText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    position: 'absolute',
+    bottom: 20,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 8,
+    borderRadius: 5,
+  },
+  floatingButton: {
+    position: "absolute",
+    bottom: 30,
+    alignSelf: "center",
+    backgroundColor: "#4782DA",
+    borderRadius: 30,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    elevation: 5,
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  previewImage: {
+    width: "90%",
+    height: "70%",
+    resizeMode: "contain",
+    borderRadius: 10,
+  },
+  previewButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    minWidth: 120,
+    alignItems: "center",
   },
 });

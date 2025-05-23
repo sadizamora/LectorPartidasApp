@@ -37,9 +37,11 @@ export default function CamaraCertScreen({ route, navigation }) {
     if (cameraRef.current) {
       const photo = await cameraRef.current.takePictureAsync({
         base64: true,
-        quality: 0.7,
-        width: 1700,
-        height: 2200
+        quality: 0.9,
+        width: 2400,
+        height: 3200,
+        exif: true,
+        imageType: 'png'
       });
       const newPhotos = [...photos, photo.uri];
       setPhotos(newPhotos);
@@ -215,6 +217,12 @@ export default function CamaraCertScreen({ route, navigation }) {
               minWidth: 220,
             }}
           >
+            <MaterialCommunityIcons
+              name="alert-circle"
+              size={48}
+              color="#EA963E"
+              style={{ marginBottom: 10 }}
+            />
             <Text
               style={{
                 color: "#1B2635",
@@ -270,7 +278,7 @@ export default function CamaraCertScreen({ route, navigation }) {
             }}
           >
             <MaterialCommunityIcons
-              name="alert-circle-outline"
+              name="file-cancel"
               size={48}
               color="#EA963E"
               style={{ marginBottom: 10 }}

@@ -14,10 +14,11 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function QRResultCertScreen({ route, navigation }) {
-  const { scannedData, scannedDataRecuperacion, carnet, dataAlumno, user, url, urlRecuperacion } = route.params;
+  const { scannedData, scannedDataRecuperacion, carnet, dataAlumno, user, url, urlRecuperacion, scannedDataImagen} = route.params;
 
   const certificado = scannedData;
   const certificadoRecuperacion = scannedDataRecuperacion;
+  const certificadoImagen = scannedDataImagen;
 
   // Estado para mostrar el modal de aviso
   const [showAviso, setShowAviso] = useState(false);
@@ -57,6 +58,7 @@ export default function QRResultCertScreen({ route, navigation }) {
     setLoading(true);
     setTimeout(async () => {
       try {
+        console.log('certificado', certificado);
         // Guardar certificado original
         const response = await fetch(
           `${API_URL}/schoolapi/utils/insert_certificado`,
@@ -70,13 +72,11 @@ export default function QRResultCertScreen({ route, navigation }) {
               OS: "Windows",
               Data: { Detalle: certificado },
               Recuperacion: false,
-              UrlCertificado: url,
               Carnet: carnet,
             }),
           }
         );
         const data = await response.json();
-
         // Si hay certificado de recuperación, guardarlo también
         if (certificadoRecuperacion) {
           const responseRecuperacion = await fetch(
@@ -90,7 +90,6 @@ export default function QRResultCertScreen({ route, navigation }) {
                 HostName: "DEV1",
                 OS: "Windows",
                 Data: { Detalle: certificadoRecuperacion },
-                UrlCertificado: urlRecuperacion,
                 Recuperacion: true,
                 Carnet: carnet,
               }),
@@ -127,7 +126,7 @@ export default function QRResultCertScreen({ route, navigation }) {
   };
 
   // Renderizado de datos generales del certificado
-  const renderCertGeneral = (cert, titulo = "Certificado escolar") => (
+  const renderCertGeneral = (cert, titulo, certFecha) => (
     <View
       style={{
         marginBottom: 16,
@@ -255,7 +254,7 @@ export default function QRResultCertScreen({ route, navigation }) {
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Fecha emisión: </Text>
-        {cert.fecha_emision}
+        {certFecha ? certFecha.fecha_emision : cert.fecha_emision}
       </Text>
       <Text style={styles.dataText}>
         <Text style={styles.label}>Responsable: </Text>
@@ -324,68 +323,72 @@ export default function QRResultCertScreen({ route, navigation }) {
   };
 
   // Renderizado de materias
-  const renderMaterias = (cert, titulo = "Materias certificado") => (
-    <View
-      style={{
-        backgroundColor: "#fff",
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 16,
-      }}
-    >
-      <Text
+  const renderMaterias = (cert, titulo = "Materias certificado") => {
+    let correlativoInterno = 1;
+    return (
+      <View
         style={{
-          fontWeight: "bold",
-          fontSize: 18,
-          color: "#4782DA",
-          textAlign: "center",
-          marginBottom: 8,
+          backgroundColor: "#fff",
+          borderRadius: 8,
+          padding: 12,
+          marginBottom: 16,
         }}
       >
-        {titulo}
-      </Text>
-      {cert.materias.map((m) => (
-        <View
-          key={m.no}
+        <Text
           style={{
-            borderBottomWidth: 1,
-            borderBottomColor: "#eee",
-            paddingVertical: 6,
+            fontWeight: "bold",
+            fontSize: 18,
+            color: "#4782DA",
+            textAlign: "center",
+            marginBottom: 8,
           }}
         >
-          <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
-            {m.no}. {m.nombre}
-          </Text>
-          {m.submateria !== "" && m.submateria !== null && (
-            <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
-              {m.submateria}
-            </Text>
-          )}
-          <Text style={{ color: "#333" }}>
-            Nota numérica:{" "}
-            <Text style={{ fontWeight: "bold" }}>{m.nota_numerica}</Text>
-          </Text>
-          <Text style={{ color: "#333" }}>
-            Nota en letras:{" "}
-            <Text style={{ fontWeight: "bold" }}>{m.nota_letras}</Text>
-          </Text>
-          <Text
+          {titulo}
+        </Text>
+        {cert.materias.map((m, idx) => (
+          <View
+            key={idx}
             style={{
-              color: m.nota_numerica >= 60 ? "green" : "red",
-              fontWeight: "bold",
+              borderBottomWidth: 1,
+              borderBottomColor: "#eee",
+              paddingVertical: 6,
             }}
           >
-            Resultado: {m.resultado}
-          </Text>
-          {m.fecha !== "" && m.fecha !== null && (
             <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
-            Fecha: {m.fecha}
+              {correlativoInterno++}. {m.nombre}
             </Text>
-          )}
-        </View>
-      ))}
-    </View>
-  );
+            {m.submateria !== "" && m.submateria !== null && (
+              <Text style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}>
+                {m.submateria}
+              </Text>
+            )}
+            <Text style={{ color: "#333", marginLeft: 20 }}>
+              Nota numérica:{" "}
+              <Text style={{ fontWeight: "bold" }}>{m.nota_numerica}</Text>
+            </Text>
+            <Text style={{ color: "#333", marginLeft: 20 }}>
+              Nota en letras:{" "}
+              <Text style={{ fontWeight: "bold" }}>{m.nota_letras}</Text>
+            </Text>
+            <Text
+              style={{
+                color: m.nota_numerica >= 60 ? "green" : "red",
+                fontWeight: "bold",
+                marginLeft: 20
+              }}
+            >
+              Resultado: {m.resultado}
+            </Text>
+            {m.fecha !== "" && m.fecha !== null && (
+              <Text style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}>
+                Fecha: {m.fecha}
+              </Text>
+            )}
+          </View>
+        ))}
+      </View>
+    );
+  };
 
   return (
     <>
@@ -681,7 +684,7 @@ export default function QRResultCertScreen({ route, navigation }) {
 
       <ScrollView contentContainerStyle={styles.container}>
         {/* Certificado Original */}
-        {renderCertGeneral(certificado)}
+        {renderCertGeneral(certificado,"Certificado escolar", certificadoImagen)}
         {/* Validaciones del certificado original */}
         {renderValidaciones(certificado)}
         {/* Materias del certificado original */}
@@ -690,7 +693,7 @@ export default function QRResultCertScreen({ route, navigation }) {
         {/* Certificado de Recuperación si existe */}
         {certificadoRecuperacion && (
           <>
-            {renderCertGeneral(certificadoRecuperacion, "Certificado de recuperación")}
+            {renderCertGeneral(certificadoRecuperacion, "Certificado de recuperación", certificadoImagen)}
             {renderValidaciones(certificadoRecuperacion)}
             {renderMaterias(certificadoRecuperacion, "Materias de recuperación")}
           </>
@@ -711,13 +714,11 @@ export default function QRResultCertScreen({ route, navigation }) {
 
           <TouchableHighlight
             style={styles.button}
-            onPress={() =>
-              navigation.navigate("QRCertEstudios", { dataAlumno, carnet, user })
-            }
+            onPress={() => navigation.replace("CamaraCert", { dataAlumno, carnet, user })}
           >
             <View style={styles.buttonContent}>
               <MaterialCommunityIcons
-                name="qrcode-scan"
+                name="camera"
                 size={24}
                 color="white"
               />

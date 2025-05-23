@@ -171,7 +171,7 @@ export default function HomeScreen({ navigation, route }) {
           </View>
         </TouchableHighlight>
         {/* Botón Escanear certificados estudios */}
-        <TouchableHighlight
+        {/* <TouchableHighlight
           style={styles.button}
           underlayColor="#3366b3"
           onPress={() =>
@@ -188,7 +188,7 @@ export default function HomeScreen({ navigation, route }) {
               Escanear certificados de estudios
             </Text>
           </View>
-        </TouchableHighlight>
+        </TouchableHighlight> */}
         {/* Botón tomar foto certificados estudios */}
         <TouchableHighlight
           style={styles.button}
@@ -199,12 +199,12 @@ export default function HomeScreen({ navigation, route }) {
         >
           <View style={styles.buttonContent}>
             <MaterialCommunityIcons
-              name="numeric-4-circle"
+              name="numeric-3-circle"
               size={28}
               color="#fff"
             />
             <Text style={styles.buttonText}>
-              Foto certificados de estudios
+              Certificados de estudios
             </Text>
           </View>
         </TouchableHighlight>
