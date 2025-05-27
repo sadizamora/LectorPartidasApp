@@ -14,7 +14,16 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function QRResultCertScreen({ route, navigation }) {
-  const { scannedData, scannedDataRecuperacion, carnet, dataAlumno, user, url, urlRecuperacion, scannedDataImagen} = route.params;
+  const {
+    scannedData,
+    scannedDataRecuperacion,
+    carnet,
+    dataAlumno,
+    user,
+    url,
+    urlRecuperacion,
+    scannedDataImagen,
+  } = route.params;
 
   const certificado = scannedData;
   const certificadoRecuperacion = scannedDataRecuperacion;
@@ -58,7 +67,7 @@ export default function QRResultCertScreen({ route, navigation }) {
     setLoading(true);
     setTimeout(async () => {
       try {
-        console.log('certificado', certificado);
+        console.log("certificado", certificado);
         // Guardar certificado original
         const response = await fetch(
           `${API_URL}/schoolapi/utils/insert_certificado`,
@@ -177,9 +186,9 @@ export default function QRResultCertScreen({ route, navigation }) {
             {
               color:
                 cert.validaciones &&
-                  cert.validaciones[0] &&
-                  cert.validaciones[0].Mensaje &&
-                  cert.validaciones[0].Mensaje.trim() !== ""
+                cert.validaciones[0] &&
+                cert.validaciones[0].Mensaje &&
+                cert.validaciones[0].Mensaje.trim() !== ""
                   ? "#b30000"
                   : undefined,
             },
@@ -191,9 +200,9 @@ export default function QRResultCertScreen({ route, navigation }) {
           style={{
             color:
               cert.validaciones &&
-                cert.validaciones[0] &&
-                cert.validaciones[0].Mensaje &&
-                cert.validaciones[0].Mensaje.trim() !== ""
+              cert.validaciones[0] &&
+              cert.validaciones[0].Mensaje &&
+              cert.validaciones[0].Mensaje.trim() !== ""
                 ? "#b30000"
                 : undefined,
           }}
@@ -208,9 +217,9 @@ export default function QRResultCertScreen({ route, navigation }) {
             {
               color:
                 cert.validaciones &&
-                  cert.validaciones[1] &&
-                  cert.validaciones[1].Mensaje &&
-                  cert.validaciones[1].Mensaje.trim() !== ""
+                cert.validaciones[1] &&
+                cert.validaciones[1].Mensaje &&
+                cert.validaciones[1].Mensaje.trim() !== ""
                   ? "#b30000"
                   : undefined,
             },
@@ -222,9 +231,9 @@ export default function QRResultCertScreen({ route, navigation }) {
           style={{
             color:
               cert.validaciones &&
-                cert.validaciones[1] &&
-                cert.validaciones[1].Mensaje &&
-                cert.validaciones[1].Mensaje.trim() !== ""
+              cert.validaciones[1] &&
+              cert.validaciones[1].Mensaje &&
+              cert.validaciones[1].Mensaje.trim() !== ""
                 ? "#b30000"
                 : undefined,
           }}
@@ -358,8 +367,17 @@ export default function QRResultCertScreen({ route, navigation }) {
               {correlativoInterno++}. {m.nombre}
             </Text>
             {m.submateria !== "" && m.submateria !== null && (
-              <Text style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}>
+              <Text
+                style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}
+              >
                 {m.submateria}
+              </Text>
+            )}
+            {m.submateria2 !== "" && m.submateria2 !== null && (
+              <Text
+                style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}
+              >
+                {m.submateria2}
               </Text>
             )}
             <Text style={{ color: "#333", marginLeft: 20 }}>
@@ -374,13 +392,15 @@ export default function QRResultCertScreen({ route, navigation }) {
               style={{
                 color: m.nota_numerica >= 60 ? "green" : "red",
                 fontWeight: "bold",
-                marginLeft: 20
+                marginLeft: 20,
               }}
             >
               Resultado: {m.resultado}
             </Text>
             {m.fecha !== "" && m.fecha !== null && (
-              <Text style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}>
+              <Text
+                style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}
+              >
                 Fecha: {m.fecha}
               </Text>
             )}
@@ -684,7 +704,11 @@ export default function QRResultCertScreen({ route, navigation }) {
 
       <ScrollView contentContainerStyle={styles.container}>
         {/* Certificado Original */}
-        {renderCertGeneral(certificado,"Certificado escolar", certificadoImagen)}
+        {renderCertGeneral(
+          certificado,
+          "Certificado escolar",
+          certificadoImagen
+        )}
         {/* Validaciones del certificado original */}
         {renderValidaciones(certificado)}
         {/* Materias del certificado original */}
@@ -693,9 +717,16 @@ export default function QRResultCertScreen({ route, navigation }) {
         {/* Certificado de Recuperación si existe */}
         {certificadoRecuperacion && (
           <>
-            {renderCertGeneral(certificadoRecuperacion, "Certificado de recuperación", certificadoImagen)}
+            {renderCertGeneral(
+              certificadoRecuperacion,
+              "Certificado de recuperación",
+              certificadoImagen
+            )}
             {renderValidaciones(certificadoRecuperacion)}
-            {renderMaterias(certificadoRecuperacion, "Materias de recuperación")}
+            {renderMaterias(
+              certificadoRecuperacion,
+              "Materias de recuperación"
+            )}
           </>
         )}
 
@@ -714,14 +745,12 @@ export default function QRResultCertScreen({ route, navigation }) {
 
           <TouchableHighlight
             style={styles.button}
-            onPress={() => navigation.replace("CamaraCert", { dataAlumno, carnet, user })}
+            onPress={() =>
+              navigation.replace("CamaraCert", { dataAlumno, carnet, user })
+            }
           >
             <View style={styles.buttonContent}>
-              <MaterialCommunityIcons
-                name="camera"
-                size={24}
-                color="white"
-              />
+              <MaterialCommunityIcons name="camera" size={24} color="white" />
               <Text style={styles.buttonText}>Escanear otro</Text>
             </View>
           </TouchableHighlight>
