@@ -1,5 +1,5 @@
 // HomeScreen.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   SafeAreaView,
@@ -7,9 +7,12 @@ import {
   TouchableWithoutFeedback,
   TouchableHighlight,
   StyleSheet,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Camera } from "expo-camera";
+import { useFocusEffect } from "@react-navigation/native";
 import Constants from "expo-constants";
 
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
@@ -17,6 +20,11 @@ const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 export default function HomeScreen({ navigation, route }) {
   const { dataAlumno, carnet, user } = route.params;
   const [hasPermission, setHasPermission] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [certificadosData, setCertificadosData] = useState({
+    ContadorCerti: 0,
+    Ciclos: "",
+  });
 
   useEffect(() => {
     (async () => {
@@ -24,6 +32,36 @@ export default function HomeScreen({ navigation, route }) {
       setHasPermission(status === "granted");
     })();
   }, []);
+
+  // Función para obtener datos de certificados
+  const fetchCertificadosData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/schoolapi/utils/busquedas?opcion=CARNET&Carnet=${carnet}`,
+        {
+          headers: JSON.parse(REACT_APP_API_HEADERS),
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+      setCertificadosData({
+        ContadorCerti: data[0].ContadorCerti || 0,
+        Ciclos: data[0].Ciclos || "",
+      });
+    } catch (error) {
+      console.error("Error al obtener datos de certificados:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Ejecutar fetchCertificadosData cada vez que la pantalla se enfoque
+  useFocusEffect(
+    useCallback(() => {
+      fetchCertificadosData();
+    }, [carnet, user.IdEmp])
+  );
 
   if (hasPermission === null) {
     return (
@@ -65,11 +103,36 @@ export default function HomeScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Modal visible={loading} transparent animationType="fade">
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#e6ecf5",
+              borderRadius: 16,
+              padding: 32,
+              alignItems: "center",
+              minWidth: 180,
+            }}
+          >
+            <ActivityIndicator size="large" color="#EA963E" />
+            <Text style={{ color: "#1B2635", marginTop: 10, fontSize: 18 }}>
+              Cargando...
+            </Text>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.containerHome}>
         {/* Encabezado con CARNET y botón de edición */}
         <View
           style={{
-            marginBottom: 30,
+            marginBottom: 10,
             width: "100%",
             alignItems: "center",
             borderBottomColor: "#EA963E",
@@ -113,7 +176,7 @@ export default function HomeScreen({ navigation, route }) {
         </View>
         <View
           style={{
-            marginBottom: 30,
+            marginBottom: 10,
             width: "100%",
             alignItems: "center",
             borderBottomColor: "#EA963E",
@@ -134,6 +197,56 @@ export default function HomeScreen({ navigation, route }) {
             ]}
           >
             {dataAlumno?.Alumno}
+          </Text>
+        </View>
+        <View
+          style={{
+            marginBottom: 10,
+            width: "100%",
+            alignItems: "center",
+            borderBottomColor: "#EA963E",
+            borderBottomWidth: 1,
+          }}
+        >
+          <Text style={[styles.subtitleText, { textAlign: "center" }]}>
+            Cantidad de certificados guardados
+          </Text>
+          <Text
+            style={[
+              styles.subtitleText,
+              {
+                color: "#EA963E",
+                fontSize: 28,
+                textAlign: "center",
+              },
+            ]}
+          >
+            {certificadosData.ContadorCerti}
+          </Text>
+        </View>
+        <View
+          style={{
+            marginBottom: 20,
+            width: "100%",
+            alignItems: "center",
+            borderBottomColor: "#EA963E",
+            borderBottomWidth: 1,
+          }}
+        >
+          <Text style={[styles.subtitleText, { textAlign: "center" }]}>
+            Ciclos de certificados guardados
+          </Text>
+          <Text
+            style={[
+              styles.subtitleText,
+              {
+                color: "#EA963E",
+                fontSize: 22,
+                textAlign: "center",
+              },
+            ]}
+          >
+            {certificadosData.Ciclos}
           </Text>
         </View>
         {/* Botón RENAP */}
@@ -203,9 +316,7 @@ export default function HomeScreen({ navigation, route }) {
               size={28}
               color="#fff"
             />
-            <Text style={styles.buttonText}>
-              Certificados de estudios
-            </Text>
+            <Text style={styles.buttonText}>Certificados de estudios</Text>
           </View>
         </TouchableHighlight>
       </View>
@@ -217,7 +328,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1B2635",
-    paddingTop: 40,
+    paddingTop: 10,
   },
   containerHome: {
     flex: 1,
