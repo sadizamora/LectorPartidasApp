@@ -19,7 +19,7 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function CamaraCertScreen({ route, navigation }) {
-  const { dataAlumno, carnet, user } = route.params;
+  const { dataAlumno, carnet, user, subMateria } = route.params;
   const cameraRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -41,7 +41,7 @@ export default function CamaraCertScreen({ route, navigation }) {
         width: 2400,
         height: 3200,
         exif: true,
-        imageType: 'png'
+        imageType: "png",
       });
       const newPhotos = [...photos, photo.uri];
       setPhotos(newPhotos);
@@ -92,16 +92,20 @@ export default function CamaraCertScreen({ route, navigation }) {
       setBase64Images(encoded);
 
       // Envía la imagen al servidor
-      const response = await fetch(`${API_URL}/schoolapi/utils/lectura_certificado_imagen`, {
-        method: "POST",
-        headers: JSON.parse(REACT_APP_API_HEADERS),
-        body: JSON.stringify({
-          FotoCertificado: encoded[0],
-          Carnet: carnet,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/schoolapi/utils/lectura_certificado_imagen`,
+        {
+          method: "POST",
+          headers: JSON.parse(REACT_APP_API_HEADERS),
+          body: JSON.stringify({
+            FotoCertificado: encoded[0],
+            Carnet: carnet,
+            SubMateria: subMateria || 0,
+          }),
+        }
+      );
       const data = await response.json();
-      console.log('data', data);
+      console.log("data", data);
 
       // Si es la primera foto
       if (!esSegundaFoto) {
@@ -302,7 +306,8 @@ export default function CamaraCertScreen({ route, navigation }) {
                 marginBottom: 20,
               }}
             >
-              El alumno tiene una nota no promovida. ¿Deseas capturar el certificado de recuperación?
+              El alumno tiene una nota no promovida. ¿Deseas capturar el
+              certificado de recuperación?
             </Text>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <TouchableHighlight
@@ -315,7 +320,9 @@ export default function CamaraCertScreen({ route, navigation }) {
                 underlayColor="#3366b3"
                 onPress={handleReiniciarCaptura}
               >
-                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                <Text
+                  style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+                >
                   Sí
                 </Text>
               </TouchableHighlight>
@@ -329,7 +336,9 @@ export default function CamaraCertScreen({ route, navigation }) {
                 underlayColor="#888"
                 onPress={handleContinuar}
               >
-                <Text style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
+                <Text
+                  style={{ color: "white", fontWeight: "bold", fontSize: 16 }}
+                >
                   No
                 </Text>
               </TouchableHighlight>
@@ -341,12 +350,17 @@ export default function CamaraCertScreen({ route, navigation }) {
       {showPreview ? (
         <View style={styles.previewContainer}>
           <Text style={styles.title}>
-            {esSegundaFoto ? "Certificado de Recuperación Capturado" : "Certificado Capturado"}
+            {esSegundaFoto
+              ? "Certificado de Recuperación Capturado"
+              : "Certificado Capturado"}
           </Text>
 
           <View style={styles.thumbnailWrapper}>
             <TouchableOpacity onPress={() => setSelectedImage(photos[0])}>
-              <Image source={{ uri: photos[0] }} style={styles.thumbnailLarge} />
+              <Image
+                source={{ uri: photos[0] }}
+                style={styles.thumbnailLarge}
+              />
             </TouchableOpacity>
             <Text style={styles.thumbnailText}>
               {esSegundaFoto ? "Certificado de Recuperación" : "Certificado"}
@@ -388,10 +402,9 @@ export default function CamaraCertScreen({ route, navigation }) {
               size={24}
               color="#fff"
             />
-            {esSegundaFoto 
+            {esSegundaFoto
               ? "Capture el certificado de recuperación completo"
-              : "Capture el certificado completo"
-            }
+              : "Capture el certificado completo"}
           </Text>
 
           <TouchableHighlight
@@ -420,16 +433,16 @@ const styles = StyleSheet.create({
   },
   guideOverlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   guideBox: {
-    width: '85%',
-    height: '90%',
+    width: "85%",
+    height: "90%",
     borderWidth: 2,
-    borderColor: '#EA963E',
+    borderColor: "#EA963E",
     borderRadius: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   helperText: {
     position: "absolute",
@@ -546,4 +559,4 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "bold",
   },
-}); 
+});

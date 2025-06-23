@@ -21,6 +21,8 @@ export default function HomeScreen({ navigation, route }) {
   const { dataAlumno, carnet, user } = route.params;
   const [hasPermission, setHasPermission] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showCertModal, setShowCertModal] = useState(false);
+  const [subMateria, setSubMateria] = useState(null);
   const [certificadosData, setCertificadosData] = useState({
     ContadorCerti: 0,
     Ciclos: "",
@@ -31,7 +33,7 @@ export default function HomeScreen({ navigation, route }) {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
-  }, []);
+  }, []); // <-- Faltaba el array de dependencias para cerrar el useEffect correctamente
 
   // Función para obtener datos de certificados
   const fetchCertificadosData = async () => {
@@ -306,9 +308,7 @@ export default function HomeScreen({ navigation, route }) {
         <TouchableHighlight
           style={styles.button}
           underlayColor="#3366b3"
-          onPress={() =>
-            navigation.navigate("CamaraCert", { dataAlumno, carnet, user })
-          }
+          onPress={() => setShowCertModal(true)}
         >
           <View style={styles.buttonContent}>
             <MaterialCommunityIcons
@@ -319,6 +319,48 @@ export default function HomeScreen({ navigation, route }) {
             <Text style={styles.buttonText}>Certificados de estudios</Text>
           </View>
         </TouchableHighlight>
+        {/* Modal para seleccionar tipo de lectura */}
+        <Modal
+          visible={showCertModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowCertModal(false)}
+        >
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.4)' }}>
+            <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, alignItems: 'center', minWidth: 250 }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 20, color: '#1B2635' }}>Selecciona el tipo de lectura</Text>
+              <TouchableHighlight
+                style={[styles.button, { width: '100%', marginBottom: 10 }]}
+                underlayColor="#3366b3"
+                onPress={() => {
+                  setSubMateria(false);
+                  setShowCertModal(false);
+                  navigation.navigate("CamaraCert", { dataAlumno, carnet, user, SubMateria: false });
+                }}
+              >
+                <Text style={styles.buttonText}>Lectura normal</Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={[styles.button, { width: '100%' }]}
+                underlayColor="#3366b3"
+                onPress={() => {
+                  setSubMateria(true);
+                  setShowCertModal(false);
+                  navigation.navigate("CamaraCert", { dataAlumno, carnet, user, SubMateria: true });
+                }}
+              >
+                <Text style={styles.buttonText}>Lectura con división de materias</Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={{ marginTop: 15 }}
+                underlayColor="#eee"
+                onPress={() => setShowCertModal(false)}
+              >
+                <Text style={{ color: '#EA963E', fontWeight: 'bold' }}>Cancelar</Text>
+              </TouchableHighlight>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
