@@ -19,7 +19,7 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function CamaraCertScreen({ route, navigation }) {
-  const { dataAlumno, carnet, user, subMateria } = route.params;
+  const { dataAlumno, carnet, user, SubMateria } = route.params;
   const cameraRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -100,7 +100,7 @@ export default function CamaraCertScreen({ route, navigation }) {
           body: JSON.stringify({
             FotoCertificado: encoded[0],
             Carnet: carnet,
-            SubMateria: subMateria || 0,
+            SubMateria: SubMateria || 0,
           }),
         }
       );
