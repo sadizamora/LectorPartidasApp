@@ -32,6 +32,8 @@ export default function CamaraCertScreen({ route, navigation }) {
   const [showRecuperacion, setShowRecuperacion] = useState(false);
   const [certificadoOriginal, setCertificadoOriginal] = useState(null);
   const [esSegundaFoto, setEsSegundaFoto] = useState(false);
+  const [contadorRecuperacion, setContadorRecuperacion] = useState(0);
+  const [certificadosRecuperacion, setCertificadosRecuperacion] = useState([]);
 
   const takePhoto = async () => {
     if (cameraRef.current) {
@@ -107,7 +109,7 @@ export default function CamaraCertScreen({ route, navigation }) {
       const data = await response.json();
       console.log("data", data);
 
-      // Si es la primera foto
+      // Si es la primera foto (certificado original)
       if (!esSegundaFoto) {
         // Verificar si hay materias con nota menor a 60
         const tieneMateriaReprobada = data.msg.materias?.some(
@@ -135,16 +137,36 @@ export default function CamaraCertScreen({ route, navigation }) {
           });
         }, 150);
       } else {
-        // Es la segunda foto (certificado de recuperación)
+        // Es un certificado de recuperación
+        const nuevosCertificados = [...certificadosRecuperacion, data.msg];
+        
+        // Verificar si hay materias con nota menor a 60 en el certificado de recuperación
+        const tieneMateriaReprobada = data.msg.materias?.some(
+          (materia) => parseFloat(materia.nota_numerica) < 60
+        );
+
+        // Si hay materias reprobadas y no hemos alcanzado el límite de 3 certificados
+        if (tieneMateriaReprobada && contadorRecuperacion < 2) {
+          setCertificadosRecuperacion(nuevosCertificados);
+          setContadorRecuperacion(contadorRecuperacion + 1);
+          setLoading(false);
+          setShowRecuperacion(true);
+          resetCapture();
+          return;
+        }
+
+        // Si no hay materias reprobadas o ya son 3 certificados
         setLoading(false);
         setShowPreview(false);
         setShowCamera(false);
+        setShowRecuperacion(false);
+        
         setTimeout(() => {
           navigation.navigate("QRResultEstudios", {
             dataAlumno,
             carnet,
             scannedData: certificadoOriginal,
-            scannedDataRecuperacion: data.msg,
+            scannedDataRecuperacion: nuevosCertificados,
             user,
             url: null,
           });
@@ -172,6 +194,17 @@ export default function CamaraCertScreen({ route, navigation }) {
               onPress={() => setSelectedImage(null)}
             >
               <Text style={styles.closeButtonText}>Cerrar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { backgroundColor: contadorRecuperacion < 2 ? "#4CAF50" : "#ff4444" },
+              ]}
+              onPress={contadorRecuperacion < 2 ? handleReiniciarCaptura : handleContinuar}
+            >
+              <Text style={styles.buttonText}>
+                {contadorRecuperacion < 2 ? "Tomar foto" : "Continuar"}
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableWithoutFeedback>
@@ -306,8 +339,12 @@ export default function CamaraCertScreen({ route, navigation }) {
                 marginBottom: 20,
               }}
             >
-              El alumno tiene una nota no promovida. ¿Deseas capturar el
-              certificado de recuperación?
+              {contadorRecuperacion === 0
+                ? "El certificado contiene notas menores a 60 puntos. Por favor, tome una foto del certificado de recuperación."
+                : `Certificado de recuperación ${contadorRecuperacion} contiene notas menores a 60. ` +
+                  (contadorRecuperacion < 2
+                    ? "Por favor, tome una foto de otro certificado de recuperación."
+                    : "Ha alcanzado el máximo de certificados de recuperación permitidos.")}
             </Text>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <TouchableHighlight
