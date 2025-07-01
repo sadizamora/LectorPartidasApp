@@ -29,6 +29,8 @@ export default function QRResultCertScreen({ route, navigation }) {
   const certificadoRecuperacion = scannedDataRecuperacion;
   const certificadoImagen = scannedDataImagen;
 
+  console.log("certificadoRecuperacion", certificadoRecuperacion);
+
   // Estado para mostrar el modal de aviso
   const [showAviso, setShowAviso] = useState(false);
 
@@ -48,17 +50,50 @@ export default function QRResultCertScreen({ route, navigation }) {
   const [puedeContinuar, setPuedeContinuar] = useState(false);
 
   const handleSave = async () => {
-    // Si hay mensajes de validación no vacíos, mostrar en el modal de confirmación
-    const mensajes = (certificado.validaciones || [])
-      .map((v) => v.Mensaje && v.Mensaje.trim())
-      .filter((msg) => msg && msg !== "");
-    if (mensajes.length > 0) {
-      setMensajeAviso(mensajes.join("\n"));
-      setPuedeContinuar(true); // Permitir continuar después del modal
+    try {
+      // Verificar si certificado es válido
+      if (!certificado) {
+        setMensajeAviso("No se encontró información del certificado");
+        setShowAviso(true);
+        return;
+      }
+
+      // Función para validar un certificado individual
+      const validarCertificado = (cert) => {
+        if (!cert) return [];
+        const validaciones = Array.isArray(cert.validaciones) 
+          ? cert.validaciones 
+          : [];
+        return validaciones
+          .filter(v => v && v.Mensaje)
+          .map(v => v.Mensaje.trim())
+          .filter(msg => msg !== "");
+      };
+
+      // Validar certificado principal
+      const mensajes = validarCertificado(certificado);
+
+      // Validar certificado(s) de recuperación
+      if (Array.isArray(certificadoRecuperacion)) {
+        certificadoRecuperacion.forEach(cert => {
+          mensajes.push(...validarCertificado(cert));
+        });
+      } else if (certificadoRecuperacion) {
+        mensajes.push(...validarCertificado(certificadoRecuperacion));
+      }
+
+      if (mensajes.length > 0) {
+        setMensajeAviso(mensajes.join("\n"));
+        setPuedeContinuar(true);
+        setShowAviso(true);
+        return;
+      }
+      setShowConfirm(true);
+    } catch (error) {
+      console.error("Error en handleSave:", error);
+      setMensajeAviso("Ocurrió un error al validar los datos");
       setShowAviso(true);
-      return;
     }
-    setShowConfirm(true); // Mostrar modal de confirmación
   };
 
   // Nueva función para confirmar y enviar el POST
@@ -322,9 +357,9 @@ export default function QRResultCertScreen({ route, navigation }) {
               color="#b30000"
               style={{ marginRight: 6, marginTop: 2 }}
             />
-            <Text
-              style={{ color: "#b30000", fontSize: 16, flex: 1 }}
-            >{`${v.Mensaje}`}</Text>
+            <Text style={{ color: "#b30000", fontSize: 16, flex: 1 }}>
+              {v.Mensaje}
+            </Text>
           </View>
         ))}
       </View>
@@ -332,78 +367,160 @@ export default function QRResultCertScreen({ route, navigation }) {
   };
 
   // Renderizado de materias
-  const renderMaterias = (cert, titulo = "Materias certificado") => {
-    let correlativoInterno = 1;
+  const renderMaterias = (cert, titulo = "Materias") => {
+    if (!cert || !cert.materias || !Array.isArray(cert.materias)) {
+      return null;
+    }
+    
+    // Depuración: Mostrar la estructura de las materias
+    console.log('Estructura de materias:', JSON.stringify(cert.materias, null, 2));
+
     return (
-      <View
-        style={{
-          backgroundColor: "#fff",
-          borderRadius: 8,
-          padding: 12,
-          marginBottom: 16,
-        }}
-      >
-        <Text
-          style={{
-            fontWeight: "bold",
-            fontSize: 18,
-            color: "#4782DA",
-            textAlign: "center",
-            marginBottom: 8,
-          }}
-        >
+      <View style={{ 
+        marginBottom: 16, 
+        backgroundColor: "#fff", 
+        borderRadius: 10,
+        padding: 12,
+        elevation: 2,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2
+      }}>
+        <Text style={{
+          fontSize: 18,
+          fontWeight: 'bold',
+          color: '#2C3E50',
+          marginBottom: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: '#EAEAEA',
+          paddingBottom: 6
+        }}>
           {titulo}
         </Text>
-        {cert.materias.map((m, idx) => (
-          <View
-            key={idx}
+        
+        {cert.materias.map((materia, index) => (
+          <View 
+            key={index} 
             style={{
-              borderBottomWidth: 1,
-              borderBottomColor: "#eee",
-              paddingVertical: 6,
+              backgroundColor: index % 2 === 0 ? '#F9F9F9' : '#FFFFFF',
+              borderRadius: 8,
+              padding: 12,
+              marginBottom: 8,
+              borderLeftWidth: 4,
+              borderLeftColor: '#3498DB'
             }}
           >
-            <Text style={{ fontWeight: "bold", color: "#1B2635" }}>
-              {correlativoInterno++}. {m.nombre}
+            {/* Nombre de la materia */}
+            <Text style={{
+              fontSize: 14,
+              fontWeight: '600',
+              color: '#2C3E50',
+              marginBottom: 6
+            }}>
+              {index + 1}. {materia.nombre}
             </Text>
-            {m.submateria !== "" && m.submateria !== null && (
-              <Text
-                style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}
-              >
-                {m.submateria}
-              </Text>
+
+            {/* Submateria 1 */}
+            {materia.submateria && (
+              <View style={{
+                backgroundColor: '#E8F4FD',
+                padding: 6,
+                borderRadius: 4,
+                marginBottom: 4
+              }}>
+                <Text style={{
+                  color: '#2980B9',
+                  fontSize: 14
+                }}>
+                  {materia.submateria}
+                </Text>
+              </View>
             )}
-            {m.submateria2 !== "" && m.submateria2 !== null && (
-              <Text
-                style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}
-              >
-                {m.submateria2}
-              </Text>
+
+            {/* Submateria 2 */}
+            {materia.submateria2 && (
+              <View style={{
+                backgroundColor: '#F0F8FF',
+                padding: 6,
+                borderRadius: 4,
+                marginBottom: 6
+              }}>
+                <Text style={{
+                  color: '#3498DB',
+                  fontSize: 14
+                }}>
+                  {materia.submateria2}
+                </Text>
+              </View>
             )}
-            <Text style={{ color: "#333", marginLeft: 20 }}>
-              Nota numérica:{" "}
-              <Text style={{ fontWeight: "bold" }}>{m.nota_numerica}</Text>
-            </Text>
-            <Text style={{ color: "#333", marginLeft: 20 }}>
-              Nota en letras:{" "}
-              <Text style={{ fontWeight: "bold" }}>{m.nota_letras}</Text>
-            </Text>
-            <Text
-              style={{
-                color: m.nota_numerica >= 60 ? "green" : "red",
-                fontWeight: "bold",
-                marginLeft: 20,
-              }}
-            >
-              Resultado: {m.resultado}
-            </Text>
-            {m.fecha !== "" && m.fecha !== null && (
-              <Text
-                style={{ fontWeight: "bold", color: "#1B2635", marginLeft: 20 }}
-              >
-                Fecha: {m.fecha}
-              </Text>
-            )}
+
+            {/* Notas y Resultado */}
+            <View style={{ 
+              flexDirection: 'row', 
+              justifyContent: 'space-between',
+              marginTop: 6,
+              paddingTop: 6,
+              borderTopWidth: 1,
+              borderTopColor: '#F0F0F0',
+              alignItems: 'center'
+            }}>
+              {/* Nota numérica */}
+              <View style={{ flex: 1, marginRight: 8 }}>
+                <Text style={{ 
+                  fontSize: 14,
+                  color: typeof materia.nota_numerica === 'number' 
+                    ? (materia.nota_numerica >= 60 ? '#27AE60' : '#E74C3C')
+                    : '#7F8C8D',
+                  fontWeight: 'bold'
+                }}>
+                  {materia.nota_numerica || 'N/A'}
+                </Text>
+              </View>
+              
+              {/* Resultado */}
+              <View style={{ flex: 3, marginHorizontal: 8 }}>
+                <Text style={{ 
+                  fontSize: 12,
+                  fontWeight: '600',
+                  color: materia.resultado === 'APROBADA' ? '#27AE60' : '#E74C3C',
+                  backgroundColor: materia.resultado === 'APROBADA' ? 'rgba(39, 174, 96, 0.1)' : 'rgba(231, 76, 60, 0.1)',
+                  paddingHorizontal: 6,
+                  paddingVertical: 2,
+                  borderRadius: 4,
+                  textAlign: 'center',
+                  textTransform: 'uppercase'
+                }}>
+                  {materia.resultado || 'N/A'}
+                </Text>
+              </View>
+              
+              {/* Nota en letras */}
+              <View style={{ flex: 3, marginLeft: 8 }}>
+                <Text style={{ 
+                  fontSize: 12,
+                  color: '#7F8C8D',
+                  textAlign: 'right',
+                  fontStyle: 'italic'
+                }}>
+                  {materia.nota_letras || 'N/A'}
+                </Text>
+              </View>
+
+              {materia.fecha && (
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <MaterialCommunityIcons 
+                    name="calendar" 
+                    size={14} 
+                    color="#7F8C8D" 
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text style={{ color: '#7F8C8D', fontSize: 12 }}>
+                    {materia.fecha}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
         ))}
       </View>
@@ -714,8 +831,22 @@ export default function QRResultCertScreen({ route, navigation }) {
         {/* Materias del certificado original */}
         {renderMaterias(certificado)}
 
-        {/* Certificado de Recuperación si existe */}
-        {certificadoRecuperacion && (
+        {/* Certificados de Recuperación si existen */}
+        {Array.isArray(certificadoRecuperacion) ? (
+          // Si es un array, mapear cada certificado
+          certificadoRecuperacion.map((cert, index) => (
+            <View key={index} style={{ marginTop: 20 }}>
+              {renderCertGeneral(
+                cert,
+                `Certificado de recuperación ${index + 1}`,
+                certificadoImagen
+              )}
+              {renderValidaciones(cert)}
+              {renderMaterias(cert, `Materias de recuperación ${index + 1}`)}
+            </View>
+          ))
+        ) : certificadoRecuperacion ? (
+          // Si es un solo certificado (compatibilidad hacia atrás)
           <>
             {renderCertGeneral(
               certificadoRecuperacion,
@@ -723,12 +854,9 @@ export default function QRResultCertScreen({ route, navigation }) {
               certificadoImagen
             )}
             {renderValidaciones(certificadoRecuperacion)}
-            {renderMaterias(
-              certificadoRecuperacion,
-              "Materias de recuperación"
-            )}
+            {renderMaterias(certificadoRecuperacion, "Materias de recuperación")}
           </>
-        )}
+        ) : null}
 
         {/* Botones */}
         <View style={styles.containerButton}>

@@ -160,13 +160,25 @@ export default function CamaraCertScreen({ route, navigation }) {
         setShowPreview(false);
         setShowCamera(false);
         setShowRecuperacion(false);
-        
+       
+        console.log("nuevosCertificados", nuevosCertificados);
         setTimeout(() => {
           navigation.navigate("QRResultEstudios", {
             dataAlumno,
             carnet,
-            scannedData: certificadoOriginal,
-            scannedDataRecuperacion: nuevosCertificados,
+            scannedData: {
+              ...certificadoOriginal,
+              validaciones: Array.isArray(certificadoOriginal.validaciones) 
+                ? certificadoOriginal.validaciones 
+                : []
+            },
+            // Asegurarse de que siempre sea un array, incluso si es vacío
+            scannedDataRecuperacion: Array.isArray(nuevosCertificados) 
+              ? nuevosCertificados.map(cert => ({
+                  ...cert,
+                  validaciones: Array.isArray(cert.validaciones) ? cert.validaciones : []
+                }))
+              : [],
             user,
             url: null,
           });
