@@ -370,7 +370,7 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.buttonText}>Lectura normal</Text>
               </TouchableHighlight>
               <TouchableHighlight
-                style={[styles.button, { width: "100%" }]}
+                style={[styles.button, { width: "100%", marginBottom: 10 }]}
                 underlayColor="#3366b3"
                 onPress={() => {
                   setSubMateria(true);
@@ -386,6 +386,21 @@ export default function HomeScreen({ navigation, route }) {
                 <Text style={styles.buttonText}>
                   Lectura con división de materias
                 </Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={[styles.button, { width: "100%" }]}
+                underlayColor="#3366b3"
+                onPress={() => {
+                  setShowCertModal(false);
+                  navigation.navigate("CamaraCert", {
+                    dataAlumno,
+                    carnet,
+                    user,
+                    Madurez: true,
+                  });
+                }}
+              >
+                <Text style={styles.buttonText}>Lectura madurez</Text>
               </TouchableHighlight>
               <TouchableHighlight
                 style={{ marginTop: 15 }}

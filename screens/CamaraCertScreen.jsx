@@ -19,7 +19,7 @@ import Constants from "expo-constants";
 const { API_URL, REACT_APP_API_HEADERS } = Constants.expoConfig?.extra || {};
 
 export default function CamaraCertScreen({ route, navigation }) {
-  const { dataAlumno, carnet, user, SubMateria } = route.params;
+  const { dataAlumno, carnet, user, SubMateria, Madurez } = route.params;
   const cameraRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -103,6 +103,7 @@ export default function CamaraCertScreen({ route, navigation }) {
             FotoCertificado: encoded[0],
             Carnet: carnet,
             SubMateria: SubMateria || 0,
+            Madurez: Madurez || false,
           }),
         }
       );
@@ -139,7 +140,7 @@ export default function CamaraCertScreen({ route, navigation }) {
       } else {
         // Es un certificado de recuperación
         const nuevosCertificados = [...certificadosRecuperacion, data.msg];
-        
+
         // Verificar si hay materias con nota menor a 60 en el certificado de recuperación
         const tieneMateriaReprobada = data.msg.materias?.some(
           (materia) => parseFloat(materia.nota_numerica) < 60
@@ -160,7 +161,7 @@ export default function CamaraCertScreen({ route, navigation }) {
         setShowPreview(false);
         setShowCamera(false);
         setShowRecuperacion(false);
-       
+
         console.log("nuevosCertificados", nuevosCertificados);
         setTimeout(() => {
           navigation.navigate("QRResultEstudios", {
@@ -168,15 +169,17 @@ export default function CamaraCertScreen({ route, navigation }) {
             carnet,
             scannedData: {
               ...certificadoOriginal,
-              validaciones: Array.isArray(certificadoOriginal.validaciones) 
-                ? certificadoOriginal.validaciones 
-                : []
+              validaciones: Array.isArray(certificadoOriginal.validaciones)
+                ? certificadoOriginal.validaciones
+                : [],
             },
             // Asegurarse de que siempre sea un array, incluso si es vacío
-            scannedDataRecuperacion: Array.isArray(nuevosCertificados) 
-              ? nuevosCertificados.map(cert => ({
+            scannedDataRecuperacion: Array.isArray(nuevosCertificados)
+              ? nuevosCertificados.map((cert) => ({
                   ...cert,
-                  validaciones: Array.isArray(cert.validaciones) ? cert.validaciones : []
+                  validaciones: Array.isArray(cert.validaciones)
+                    ? cert.validaciones
+                    : [],
                 }))
               : [],
             user,
@@ -210,9 +213,16 @@ export default function CamaraCertScreen({ route, navigation }) {
             <TouchableOpacity
               style={[
                 styles.button,
-                { backgroundColor: contadorRecuperacion < 2 ? "#4CAF50" : "#ff4444" },
+                {
+                  backgroundColor:
+                    contadorRecuperacion < 2 ? "#4CAF50" : "#ff4444",
+                },
               ]}
-              onPress={contadorRecuperacion < 2 ? handleReiniciarCaptura : handleContinuar}
+              onPress={
+                contadorRecuperacion < 2
+                  ? handleReiniciarCaptura
+                  : handleContinuar
+              }
             >
               <Text style={styles.buttonText}>
                 {contadorRecuperacion < 2 ? "Tomar foto" : "Continuar"}
